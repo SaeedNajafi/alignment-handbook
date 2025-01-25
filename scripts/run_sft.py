@@ -21,6 +21,7 @@ import logging
 import random
 import sys
 
+import torch.distributed as dist
 import datasets
 import torch
 import transformers
@@ -47,6 +48,9 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    
+    dist.init_process_group(backend='nccl', timeout=timedelta(seconds=360000))
+    
     parser = H4ArgumentParser((ModelArguments, DataArguments, SFTConfig))
     model_args, data_args, training_args = parser.parse()
 
