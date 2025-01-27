@@ -4,11 +4,11 @@
 #SBATCH --account=rrg-afyshe
 # #SBATCH --partition=a40
 # #SBATCH --qos=m2
-#SBATCH --nodes=4
-#SBATCH --gpus-per-node=2
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=8
-#SBATCH --mem=96G
-#SBATCH --time=2-00:00:00
+#SBATCH --mem=128G
+#SBATCH --time=1-00:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -31,13 +31,6 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-export HOSTNAMES=`scontrol show hostnames "$SLURM_JOB_NODELIST"`
-
-H=`hostname`
-THEID=`echo -e $HOSTNAMES  | python3 -c "import sys;[sys.stdout.write(str(i)) for i,line in enumerate(next(sys.stdin).split(' ')) if line.strip() == '$H'.strip()]"`
-echo THEID=$THEID
-
-
 LOG_DIR="training_logs"
 LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}.log"
 # Make logging directories.
@@ -56,18 +49,20 @@ echo "GPUs per node: ${NUM_GPUs}"
 # export NCCL_DEBUG_SUBSYS=WARN
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
+export NCCL_ASYNC_ERROR_HANDLING=1
+
 
 NUM_PROCS=$((NUM_GPUs*SLURM_NNODES))
 
 srun -N "${SLURM_NNODES}" -l \
     bash -c "WANDB_MODE=offline ACCELERATE_LOG_LEVEL=info accelerate launch \
                 --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
-                --num_machines=$SLURM_NNODES \
-                --num_processes=$NUM_PROCS \
-                --machine_rank=$THEID \
-                --main_process_ip=$MASTER_ADDR \
-                --main_process_port=$MASTER_PORT \
-                --rdzv_backend=c10d \
+                --num_machines $SLURM_NNODES \
+                --num_processes $NUM_PROCS \
+                --main_process_ip $MASTER_ADDR \
+                --main_process_port $MASTER_PORT \
+                --machine_rank $SLURM_PROCID \
+                --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
                 scripts/run_sft.py recipes/llama-3.2-1b/sft/config_lora.yaml > ${LOG_PATH} 2>&1"
 
 
