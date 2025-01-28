@@ -3,7 +3,7 @@ accelerate==1.3.0
 aiohappyeyeballs==2.4.4
 aiohttp==3.11.11
 aiosignal==1.3.2
--e git+ssh://git@github.com/SaeedNajafi/alignment-handbook.git@2677dafad202f4a264ba90c13b5d3047eb1689ff#egg=alignment_handbook
+-e git+ssh://git@github.com/SaeedNajafi/alignment-handbook.git@772156878864f0aa5d1c41611db6c1713717f42a#egg=alignment_handbook
 annotated-types==0.7.0
 anyio==4.8.0
 argon2-cffi==23.1.0
@@ -219,7 +219,7 @@ threadpoolctl==3.5.0
 tiktoken==0.7.0
 tinycss2==1.4.0
 tokenize_rt==6.1.0
-tokenizers==0.21.0
+tokenizers==0.20.3
 toml==0.10.2
 tomli==2.2.1
 tomlkit==0.13.2
@@ -229,9 +229,9 @@ torchvision==0.19.0+cu124
 tornado==6.4.2
 tqdm==4.67.1
 traitlets==5.14.3
-transformers==4.48.1
+transformers==4.46.3
 triton==3.0.0
-trl==0.13.0
+trl==0.12.2
 types-python-dateutil==2.9.0.20241206
 types-requests==2.32.0.20241016
 types-setuptools==75.8.0.20250110
