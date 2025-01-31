@@ -19,6 +19,7 @@ import sys
 
 import torch
 import transformers
+from datasets import DatasetDict
 from transformers import AutoModelForCausalLM, set_seed
 
 from alignment import (
@@ -43,6 +44,20 @@ from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
+def remove_duplicates(dataset_dict):
+    def is_unique(example, seen_set):
+        instruction = example['instruction']
+        if instruction in seen_set:
+            return False
+        seen_set.add(instruction)
+        return True
+
+    seen_instructions = set()
+    # Apply the filter to each split within the DatasetDict
+    for split in dataset_dict:
+        # Use can use the 'with' parameter for additional state, i.e., the seen_instructions set.
+        dataset_dict[split] = dataset_dict[split].filter(lambda example: is_unique(example, seen_instructions))
+    return dataset_dict
 
 def main():
     
@@ -86,8 +101,15 @@ def main():
         data_args,
         splits=data_args.dataset_splits,
         configs=data_args.dataset_configs,
-        columns_to_keep=["prompt"],
+        columns_to_keep=["instruction"],
     )
+    raw_datasets = remove_duplicates(raw_datasets)
+
+    # Replace column names with what TRL needs, text_chosen -> chosen and text_rejected -> rejected
+    for split in ["train"]:
+        raw_datasets[split] = raw_datasets[split].rename_columns(
+            {"instruction": "prompt"}
+        )
 
     logger.info(
         f"Training on the following splits: {[split + ' : ' + str(dset.num_rows) for split, dset in raw_datasets.items()]}"
@@ -100,49 +122,9 @@ def main():
     data_args.truncation_side = "left"  # Truncate from left to ensure we don't lose labels in final turn
     tokenizer = get_tokenizer(model_args, data_args)
 
-    #####################
-    # Apply chat template
-    #####################
-    raw_datasets = raw_datasets.map(
-        apply_chat_template,
-        fn_kwargs={
-            "tokenizer": tokenizer,
-            "task": "online_dpo",
-            "auto_insert_empty_system_msg": data_args.auto_insert_empty_system_msg,
-        },
-        num_proc=data_args.preprocessing_num_workers,
-        remove_columns=column_names,
-        desc="Formatting comparisons with prompt template",
-    )
-
-    ##########################
-    # Decontaminate benchmarks
-    ##########################
-    # num_raw_train_samples = len(raw_datasets["train"])
-    # raw_datasets = raw_datasets.filter(
-    #     decontaminate_humaneval,
-    #     fn_kwargs={"text_column": "text_chosen"},
-    #     batched=True,
-    #     batch_size=10_000,
-    #     num_proc=1,
-    #     desc="Decontaminating HumanEval samples",
-    # )
-    # num_filtered_train_samples = num_raw_train_samples - len(raw_datasets["train"])
-    # logger.info(
-    #     f"Decontaminated {num_filtered_train_samples} ({num_filtered_train_samples/num_raw_train_samples * 100:.2f}%) samples from the training set."
-    # )
-
-    # # Replace column names with what TRL needs, text_chosen -> chosen and text_rejected -> rejected
-    # for split in ["train", "test"]:
-    #     raw_datasets[split] = raw_datasets[split].rename_columns(
-    #         {"text_prompt": "prompt", "text_chosen": "chosen", "text_rejected": "rejected"}
-    #     )
-
     # Log a few random samples from the training set:
     for index in random.sample(range(len(raw_datasets["train"])), 3):
         logger.info(f"Prompt sample {index} of the raw training set:\n\n{raw_datasets['train'][index]['prompt']}")
-        logger.info(f"Chosen sample {index} of the raw training set:\n\n{raw_datasets['train'][index]['chosen']}")
-        logger.info(f"Rejected sample {index} of the raw training set:\n\n{raw_datasets['train'][index]['rejected']}")
 
     torch_dtype = (
         model_args.torch_dtype if model_args.torch_dtype in ["auto", None] else getattr(torch, model_args.torch_dtype)
