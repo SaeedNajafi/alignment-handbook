@@ -25,7 +25,7 @@ from huggingface_hub import list_repo_files
 from huggingface_hub.utils._validators import HFValidationError
 from peft import LoraConfig, PeftConfig
 
-from .configs import DataArguments, DPOConfig, ModelArguments, SFTConfig
+from .configs import DataArguments, DPOConfig, ModelArguments, SFTConfig, OnlineDPOConfig
 from .data import DEFAULT_CHAT_TEMPLATE
 
 
@@ -120,7 +120,7 @@ def is_adapter_model(model_name_or_path: str, revision: str = "main") -> bool:
     return "adapter_model.safetensors" in repo_files or "adapter_model.bin" in repo_files
 
 
-def get_checkpoint(training_args: SFTConfig | DPOConfig) -> Path | None:
+def get_checkpoint(training_args: SFTConfig | DPOConfig | OnlineDPOConfig) -> Path | None:
     last_checkpoint = None
     if os.path.isdir(training_args.output_dir):
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
