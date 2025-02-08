@@ -38,7 +38,7 @@ def extract_docstring(prompt: str) -> str:
 
 
 def human_eval_docstrings() -> List[str]:
-    ds = load_dataset("openai_humaneval", split="test")
+    ds = load_dataset("/home/saeednjf/nearline/rrg-afyshe/datasets/openai_humaneval", split="test")
     docstrings = [extract_docstring(v["prompt"]) for v in ds]
     return docstrings
 
@@ -54,7 +54,7 @@ FILTER_OUT = {
     "human_eval_docstrings": human_eval_docstrings(),
     "human_eval_solutions": [
         s
-        for s in load_dataset_column("openai_humaneval", "canonical_solution", "test")
+        for s in load_dataset_column("/home/saeednjf/nearline/rrg-afyshe/datasets/openai_humaneval", "canonical_solution", "test")
         if s not in HUMAN_EVAL_STRINGS_OK
     ],
 }

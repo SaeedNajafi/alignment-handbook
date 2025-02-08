@@ -20,12 +20,11 @@ import sys
 import torch
 import transformers
 from datasets import DatasetDict
-from transformers import AutoModelForCausalLM, set_seed
+from transformers import AutoModelForCausalLM, set_seed, AutoModelForSequenceClassification, AutoTokenizer
 
 from alignment import (
     DataArguments,
     OnlineDPOConfig,
-    OnlineDPOTrainer,
     H4ArgumentParser,
     ModelArguments,
     apply_chat_template,
@@ -40,7 +39,9 @@ from alignment import (
 )
 from peft import PeftConfig, PeftModel
 from datetime import timedelta
-
+import torch.distributed as dist
+from trl import OnlineDPOTrainer
+from alignment.armorm import LlamaForRewardModelWithGating
 
 logger = logging.getLogger(__name__)
 
@@ -105,11 +106,19 @@ def main():
     )
     raw_datasets = remove_duplicates(raw_datasets)
 
+    def role_adder(row):
+        prompt = row["prompt"]
+        del row["prompt"]
+        return {"messages": [{"role": "user", "content": prompt}]}
+
     # Replace column names with what TRL needs, text_chosen -> chosen and text_rejected -> rejected
     for split in ["train"]:
         raw_datasets[split] = raw_datasets[split].rename_columns(
             {"instruction": "prompt"}
         )
+    
+    for split in ["train"]:
+        raw_datasets[split] = raw_datasets[split].map(role_adder)
 
     logger.info(
         f"Training on the following splits: {[split + ' : ' + str(dset.num_rows) for split, dset in raw_datasets.items()]}"
@@ -122,9 +131,24 @@ def main():
     data_args.truncation_side = "left"  # Truncate from left to ensure we don't lose labels in final turn
     tokenizer = get_tokenizer(model_args, data_args)
 
+    #####################
+    # Apply chat template
+    #####################
+    raw_datasets = raw_datasets.map(
+        apply_chat_template,
+        fn_kwargs={
+            "tokenizer": tokenizer,
+            "task": "generation",
+            "auto_insert_empty_system_msg": data_args.auto_insert_empty_system_msg,
+        },
+        num_proc=data_args.preprocessing_num_workers,
+        remove_columns=column_names,
+        desc="Formatting comparisons with prompt template",
+    )
+
     # Log a few random samples from the training set:
     for index in random.sample(range(len(raw_datasets["train"])), 3):
-        logger.info(f"Prompt sample {index} of the raw training set:\n\n{raw_datasets['train'][index]['prompt']}")
+        logger.info(f"Prompt sample {index} of the raw training set:\n\n{raw_datasets['train'][index]}")
 
     torch_dtype = (
         model_args.torch_dtype if model_args.torch_dtype in ["auto", None] else getattr(torch, model_args.torch_dtype)
@@ -137,37 +161,52 @@ def main():
         attn_implementation=model_args.attn_implementation,
         torch_dtype=torch_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,
-        device_map=get_kbit_device_map() if quantization_config is not None else None,
+        # device_map=get_kbit_device_map() if quantization_config is not None else None,
         quantization_config=quantization_config,
     )
 
-    model = model_args.model_name_or_path
-    if is_adapter_model(model, model_args.model_revision) is True:
-        logger.info(f"Loading SFT adapter for {model_args.model_name_or_path=}")
-        peft_config = PeftConfig.from_pretrained(model_args.model_name_or_path, revision=model_args.model_revision)
-        model_kwargs = dict(
-            revision=model_args.base_model_revision,
-            trust_remote_code=model_args.trust_remote_code,
-            attn_implementation=model_args.attn_implementation,
-            torch_dtype=torch_dtype,
-            use_cache=False if training_args.gradient_checkpointing else True,
-            device_map=get_kbit_device_map() if quantization_config is not None else None,
-            quantization_config=quantization_config,
-        )
-        base_model = AutoModelForCausalLM.from_pretrained(
-            peft_config.base_model_name_or_path,
-            **model_kwargs,
-        )
-        model = PeftModel.from_pretrained(
-            base_model,
+    # model = model_args.model_name_or_path
+    # if is_adapter_model(model, model_args.model_revision) is True:
+    #     logger.info(f"Loading SFT adapter for {model_args.model_name_or_path=}")
+    #     peft_config = PeftConfig.from_pretrained(model_args.model_name_or_path, revision=model_args.model_revision)
+    #     model_kwargs = dict(
+    #         revision=model_args.base_model_revision,
+    #         trust_remote_code=model_args.trust_remote_code,
+    #         attn_implementation=model_args.attn_implementation,
+    #         torch_dtype=torch_dtype,
+    #         use_cache=False if training_args.gradient_checkpointing else True,
+    #         device_map=get_kbit_device_map() if quantization_config is not None else None,
+    #         quantization_config=quantization_config,
+    #     )
+    #     base_model = AutoModelForCausalLM.from_pretrained(
+    #         peft_config.base_model_name_or_path,
+    #         **model_kwargs,
+    #     )
+    #     model = PeftModel.from_pretrained(
+    #         base_model,
+    #         model_args.model_name_or_path,
+    #         revision=model_args.model_revision,
+    #     )
+    #     model_kwargs = None
+
+    model = AutoModelForCausalLM.from_pretrained(
             model_args.model_name_or_path,
-            revision=model_args.model_revision,
-        )
-        model_kwargs = None
+            **model_kwargs,
+            device_map="cuda:0"
+    )
 
     ref_model = None
     ref_model_kwargs = None
+    training_args.model_init_kwargs = model_kwargs
 
+    # Initialize the reward model.
+    reward_model = LlamaForRewardModelWithGating.from_pretrained(training_args.reward_model_path,
+                                                                 attn_implementation=model_args.attn_implementation,
+                                                                 torch_dtype=torch_dtype,
+                                                                 device_map="cuda:1")
+
+    reward_tokenizer = AutoTokenizer.from_pretrained(training_args.reward_model_path, use_fast=True)
+    
     #########################
     # Instantiate OnlineDPO trainer
     #########################
@@ -177,8 +216,8 @@ def main():
         reward_model=reward_model,
         args=training_args,
         train_dataset=raw_datasets["train"],
-        eval_dataset=raw_datasets["test"],
         processing_class=tokenizer,
+        reward_processing_class=reward_tokenizer,
         peft_config=get_peft_config(model_args),
     )
 
@@ -222,12 +261,12 @@ def main():
     ##########
     # Evaluate
     ##########
-    if training_args.do_eval:
-        logger.info("*** Evaluate ***")
-        metrics = trainer.evaluate()
-        metrics["eval_samples"] = len(raw_datasets["test"])
-        trainer.log_metrics("eval", metrics)
-        trainer.save_metrics("eval", metrics)
+    # if training_args.do_eval:
+    #     logger.info("*** Evaluate ***")
+    #     metrics = trainer.evaluate()
+    #     metrics["eval_samples"] = len(raw_datasets["test"])
+    #     trainer.log_metrics("eval", metrics)
+    #     trainer.save_metrics("eval", metrics)
 
     if training_args.push_to_hub is True:
         logger.info("Pushing to hub...")
