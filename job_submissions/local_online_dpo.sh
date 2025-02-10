@@ -26,12 +26,12 @@ mkdir -p "${LOG_DIR}"
 
 echo "Placing logs in: ${LOG_DIR}"
 
-export TORCH_DISTRIBUTED_DEBUG=DETAIL
-export NCCL_DEBUG=WARN
-export NCCL_DEBUG_SUBSYS=WARN
-export TORCH_CPP_LOG_LEVEL=INFO
-export LOGLEVEL=INFO
-export NCCL_ASYNC_ERROR_HANDLING=1
+# export TORCH_DISTRIBUTED_DEBUG=DETAIL
+# export NCCL_DEBUG=WARN
+# export NCCL_DEBUG_SUBSYS=WARN
+# export TORCH_CPP_LOG_LEVEL=INFO
+# export LOGLEVEL=INFO
+# export NCCL_ASYNC_ERROR_HANDLING=1
 
 
 NUM_PROCS=${NUM_GPUs}
@@ -40,7 +40,7 @@ NUM_PROCS=${NUM_GPUs}
 WANDB_MODE=offline ACCELERATE_LOG_LEVEL=info accelerate launch \
     --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
     --num_machines 1 \
-    --num_processes 1 \
+    --num_processes $NUM_PROCS \
     --main_process_ip $MASTER_ADDR \
     --main_process_port $MASTER_PORT \
     --machine_rank 0 \

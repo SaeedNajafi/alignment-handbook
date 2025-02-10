@@ -191,9 +191,8 @@ def main():
 
     model = AutoModelForCausalLM.from_pretrained(
             model_args.model_name_or_path,
-            **model_kwargs,
-            device_map="cuda:0"
-    )
+            **model_kwargs,)
+            # device_map="cuda:0")
 
     ref_model = None
     ref_model_kwargs = None
@@ -202,8 +201,8 @@ def main():
     # Initialize the reward model.
     reward_model = LlamaForRewardModelWithGating.from_pretrained(training_args.reward_model_path,
                                                                  attn_implementation=model_args.attn_implementation,
-                                                                 torch_dtype=torch_dtype,
-                                                                 device_map="cuda:1")
+                                                                 torch_dtype=torch_dtype,)
+                                                                 # device_map="cuda:1")
 
     reward_tokenizer = AutoTokenizer.from_pretrained(training_args.reward_model_path, use_fast=True)
     
