@@ -1,6 +1,6 @@
 # Model arguments
-model_name_or_path: /scratch/ssd004/scratch/snajafi/model-weights/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
-reward_model_path: /scratch/ssd004/scratch/snajafi/model-weights/ArmoRM-Llama3-8B-v0.1
+model_name_or_path: /home/saeednjf/nearline/rrg-afyshe/saeednjf/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
+reward_model_path: /home/saeednjf/nearline/rrg-afyshe/pre-trained-models/ArmoRM-Llama3-8B-v0.1
 torch_dtype: bfloat16
 model_revision: main
 attn_implementation: flash_attention_2
@@ -8,22 +8,22 @@ attn_implementation: flash_attention_2
 # LoRA arguments
 use_peft: true
 load_in_4bit: false
-lora_r: 128
-lora_alpha: 128
-lora_dropout: 0.05
+lora_r: 64
+lora_alpha: 64
+lora_dropout: 0.01
 lora_target_modules:
 - q_proj
 - k_proj
 - v_proj
 - o_proj
-- gate_proj
-- up_proj
-- down_proj
+# - gate_proj
+# - up_proj
+# - down_proj
 
 # Data training arguments
 chat_template: "{{- bos_token }}\n{%- if custom_tools is defined %}\n    {%- set tools = custom_tools %}\n{%- endif %}\n{%- if not tools_in_user_message is defined %}\n    {%- set tools_in_user_message = true %}\n{%- endif %}\n{%- if not date_string is defined %}\n    {%- if strftime_now is defined %}\n        {%- set date_string = strftime_now(\"%d %b %Y\") %}\n    {%- else %}\n        {%- set date_string = \"26 Jul 2024\" %}\n    {%- endif %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%- endif %}\n\n{#- This block extracts the system message, so we can slot it into the right place. #}\n{%- if messages[0]['role'] == 'system' %}\n    {%- set system_message = messages[0]['content']|trim %}\n    {%- set messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = \"\" %}\n{%- endif %}\n\n{#- System message #}\n{{- \"<|start_header_id|>system<|end_header_id|>\\n\\n\" }}\n{%- if tools is not none %}\n    {{- \"Environment: ipython\\n\" }}\n{%- endif %}\n{{- \"Cutting Knowledge Date: December 2023\\n\" }}\n{{- \"Today Date: \" + date_string + \"\\n\\n\" }}\n{%- if tools is not none and not tools_in_user_message %}\n    {{- \"You have access to the following functions. To call a function, please respond with JSON for a function call.\" }}\n    {{- 'Respond in the format {\"name\": function name, \"parameters\": dictionary of argument name and its value}.' }}\n    {{- \"Do not use variables.\\n\\n\" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n{%- endif %}\n{{- system_message }}\n{{- \"<|eot_id|>\" }}\n\n{#- Custom tools are passed in a user message with some extra guidance #}\n{%- if tools_in_user_message and not tools is none %}\n    {#- Extract the first user message so we can plug it in here #}\n    {%- if messages | length != 0 %}\n        {%- set first_user_message = messages[0]['content']|trim %}\n        {%- set messages = messages[1:] %}\n    {%- else %}\n        {{- raise_exception(\"Cannot put tools in the first user message when there's no first user message!\") }}\n{%- endif %}\n    {{- '<|start_header_id|>user<|end_header_id|>\\n\\n' -}}\n    {{- \"Given the following functions, please respond with a JSON for a function call \" }}\n    {{- \"with its proper arguments that best answers the given prompt.\\n\\n\" }}\n    {{- 'Respond in the format {\"name\": function name, \"parameters\": dictionary of argument name and its value}.' }}\n    {{- \"Do not use variables.\\n\\n\" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n    {{- first_user_message + \"<|eot_id|>\"}}\n{%- endif %}\n\n{%- for message in messages %}\n    {%- if not (message.role == 'ipython' or message.role == 'tool' or 'tool_calls' in message) %}\n        {{- '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n'+ message['content'] | trim + '<|eot_id|>' }}\n    {%- elif 'tool_calls' in message %}\n        {%- if not message.tool_calls|length == 1 %}\n            {{- raise_exception(\"This model only supports single tool-calls at once!\") }}\n        {%- endif %}\n        {%- set tool_call = message.tool_calls[0].function %}\n        {{- '<|start_header_id|>assistant<|end_header_id|>\\n\\n' -}}\n        {{- '{\"name\": \"' + tool_call.name + '\", ' }}\n        {{- '\"parameters\": ' }}\n        {{- tool_call.arguments | tojson }}\n        {{- \"}\" }}\n        {{- \"<|eot_id|>\" }}\n    {%- elif message.role == \"tool\" or message.role == \"ipython\" %}\n        {{- \"<|start_header_id|>ipython<|end_header_id|>\\n\\n\" }}\n        {%- if message.content is mapping or message.content is iterable %}\n            {{- message.content | tojson }}\n        {%- else %}\n            {{- message.content }}\n        {%- endif %}\n        {{- \"<|eot_id|>\" }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|start_header_id|>assistant<|end_header_id|>\\n\\n' }}\n{%- endif %}\n"
 dataset_mixer:
-  /scratch/ssd004/scratch/snajafi/datasets/UltraFeedback: 1.0
+  /home/saeednjf/nearline/rrg-afyshe/datasets/UltraFeedback: 1.0
 dataset_splits:
 - train
 preprocessing_num_workers: 8
@@ -31,11 +31,11 @@ preprocessing_num_workers: 8
 # DPOTrainer arguments
 max_grad_norm: 1.0
 bf16: true
-beta: 0.05
+beta: 0.1
 do_eval: false
 eval_strategy: 'no'
 eval_steps: 100
-gradient_accumulation_steps: 2
+gradient_accumulation_steps: 4
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
@@ -59,16 +59,16 @@ use_vllm: false
 
 num_train_epochs: 1
 optim: adamw_8bit
-output_dir: /scratch/ssd004/scratch/snajafi/vector-backup/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-online-dpo-beta-0.05-lr-5.0e-6
-run_name: llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-online-dpo-beta-0.05-lr-5.0e-6
-per_device_train_batch_size: 4
-per_device_eval_batch_size: 4
+output_dir: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-online-dpo-beta-0.1-lr-5.0e-6
+run_name: llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-online-dpo-beta-0.1-lr-5.0e-6
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 2
 push_to_hub: false
 remove_unused_columns: true
 report_to:
 - wandb
 save_strategy: "steps"
 save_steps: 100
-save_total_limit: 10
+save_total_limit: 5
 seed: 42
 warmup_ratio: 0.1
