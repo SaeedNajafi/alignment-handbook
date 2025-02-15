@@ -1,33 +1,34 @@
 # Model arguments
-model_name_or_path: alignment-handbook/zephyr-7b-sft-qlora
+model_name_or_path: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
 torch_dtype: bfloat16
+model_revision: main
 attn_implementation: flash_attention_2
 
 # LoRA arguments
 use_peft: true
-load_in_4bit: true
-lora_r: 128
-lora_alpha: 128
-lora_dropout: 0.05
+load_in_4bit: false
+lora_r: 64
+lora_alpha: 64
+lora_dropout: 0.01
 lora_target_modules:
 - q_proj
 - k_proj
 - v_proj
 - o_proj
-- gate_proj
-- up_proj
-- down_proj
+# - gate_proj
+# - up_proj
+# - down_proj
 
 # Data training arguments
-
 dataset_mixer:
-  HuggingFaceH4/ultrafeedback_binarized: 1.0
+  /home/saeednjf/nearline/rrg-afyshe/datasets/llama-3.2-1b-offline-preference-data: 1.0
 dataset_splits:
-- train_prefs
-- test_prefs
-preprocessing_num_workers: 12
+- train
+- test
+preprocessing_num_workers: 8
 
 # DPOTrainer arguments
+max_grad_norm: 1.0
 bf16: true
 beta: 0.01
 do_eval: true
@@ -37,21 +38,29 @@ gradient_accumulation_steps: 4
 gradient_checkpointing: true
 gradient_checkpointing_kwargs:
   use_reentrant: false
-hub_model_id: zephyr-7b-dpo-qlora
+# hub_model_id: zephyr-7b-dpo-qlora
 learning_rate: 5.0e-6
 log_level: info
-logging_steps: 10
+logging_steps: 5
+logging_strategy: steps
 lr_scheduler_type: cosine
-max_length: 1024
-max_prompt_length: 512
+max_length: 2048
+max_prompt_length: 1535
+max_completion_length: 512
 num_train_epochs: 1
-optim: paged_adamw_32bit
-output_dir: data/zephyr-7b-dpo-qlora # It is handy to append `hub_model_revision` to keep track of your local experiments
-per_device_train_batch_size: 4
-per_device_eval_batch_size: 8
-push_to_hub: true
+dataset_num_proc: 8
+loss_type: sigmoid
+optim: adamw_8bit
+output_dir: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-dpo-beta-0.01-lr-5.0e-6
+run_name: llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-dpo-beta-0.01-lr-5.0e-6
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 2
+push_to_hub: false
+remove_unused_columns: true
+report_to:
+- wandb
 save_strategy: "steps"
 save_steps: 100
-save_total_limit: 1
+save_total_limit: 5
 seed: 42
 warmup_ratio: 0.1

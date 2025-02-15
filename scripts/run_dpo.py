@@ -39,11 +39,15 @@ from alignment import (
 from peft import PeftConfig, PeftModel
 from trl import DPOTrainer
 
+from datetime import timedelta
+import torch.distributed as dist
 
 logger = logging.getLogger(__name__)
 
 
 def main():
+    dist.init_process_group(backend='nccl', timeout=timedelta(seconds=360000))
+
     parser = H4ArgumentParser((ModelArguments, DataArguments, DPOConfig))
     model_args, data_args, training_args = parser.parse()
 
@@ -149,34 +153,36 @@ def main():
         attn_implementation=model_args.attn_implementation,
         torch_dtype=torch_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,
-        device_map=get_kbit_device_map() if quantization_config is not None else None,
+        # device_map=get_kbit_device_map() if quantization_config is not None else None,
         quantization_config=quantization_config,
     )
 
-    model = model_args.model_name_or_path
-    if is_adapter_model(model, model_args.model_revision) is True:
-        logger.info(f"Loading SFT adapter for {model_args.model_name_or_path=}")
-        peft_config = PeftConfig.from_pretrained(model_args.model_name_or_path, revision=model_args.model_revision)
-        model_kwargs = dict(
-            revision=model_args.base_model_revision,
-            trust_remote_code=model_args.trust_remote_code,
-            attn_implementation=model_args.attn_implementation,
-            torch_dtype=torch_dtype,
-            use_cache=False if training_args.gradient_checkpointing else True,
-            device_map=get_kbit_device_map() if quantization_config is not None else None,
-            quantization_config=quantization_config,
-        )
-        base_model = AutoModelForCausalLM.from_pretrained(
-            peft_config.base_model_name_or_path,
-            **model_kwargs,
-        )
-        model = PeftModel.from_pretrained(
-            base_model,
-            model_args.model_name_or_path,
-            revision=model_args.model_revision,
-        )
-        model_kwargs = None
+    # model = model_args.model_name_or_path
+    # if is_adapter_model(model, model_args.model_revision) is True:
+    #     logger.info(f"Loading SFT adapter for {model_args.model_name_or_path=}")
+    #     peft_config = PeftConfig.from_pretrained(model_args.model_name_or_path, revision=model_args.model_revision)
+    #     model_kwargs = dict(
+    #         revision=model_args.base_model_revision,
+    #         trust_remote_code=model_args.trust_remote_code,
+    #         attn_implementation=model_args.attn_implementation,
+    #         torch_dtype=torch_dtype,
+    #         use_cache=False if training_args.gradient_checkpointing else True,
+    #         device_map=get_kbit_device_map() if quantization_config is not None else None,
+    #         quantization_config=quantization_config,
+    #     )
+    #     base_model = AutoModelForCausalLM.from_pretrained(
+    #         peft_config.base_model_name_or_path,
+    #         **model_kwargs,
+    #     )
+    #     model = PeftModel.from_pretrained(
+    #         base_model,
+    #         model_args.model_name_or_path,
+    #         revision=model_args.model_revision,
+    #     )
+    #     model_kwargs = None
 
+    model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
+    training_args.model_init_kwargs = model_kwargs
     ref_model = model
     ref_model_kwargs = model_kwargs
 
@@ -232,7 +238,7 @@ def main():
         "finetuned_from": model_args.model_name_or_path,
         "dataset": list(data_args.dataset_mixer.keys()),
         "dataset_tags": list(data_args.dataset_mixer.keys()),
-        "tags": ["alignment-handbook"],
+        "tags": ["alignment-handbook-offline-dpo"],
     }
     if trainer.accelerator.is_main_process:
         trainer.create_model_card(**kwargs)
