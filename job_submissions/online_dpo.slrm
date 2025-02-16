@@ -1,18 +1,18 @@
 #!/bin/bash
 
-#SBATCH --job-name=online-dpo-exp
-#SBATCH --account=rrg-afyshe
-# #SBATCH --partition=a40
-# #SBATCH --qos=m
-#SBATCH --nodes=1
-#SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=8
-#SBATCH --mem=128G
-#SBATCH --time=2-00:00:00
-#SBATCH --open-mode=append
-#SBATCH --wait-all-nodes=1
-#SBATCH --output=%x_%j.out
-#SBATCH --error=%x_%j.err
+# #SBATCH --job-name=online-dpo-exp
+# #SBATCH --account=rrg-afyshe
+# # #SBATCH --partition=a40
+# # #SBATCH --qos=m
+# #SBATCH --nodes=1
+# #SBATCH --gpus-per-node=4
+# #SBATCH --cpus-per-gpu=8
+# #SBATCH --mem=128G
+# #SBATCH --time=2-00:00:00
+# #SBATCH --open-mode=append
+# #SBATCH --wait-all-nodes=1
+# #SBATCH --output=%x_%j.out
+# #SBATCH --error=%x_%j.err
 
 
 module --force purge
@@ -54,15 +54,16 @@ export NCCL_ASYNC_ERROR_HANDLING=1
 
 NUM_PROCS=$((NUM_GPUs*SLURM_NNODES))
 
-srun -N "${SLURM_NNODES}" -l \
-    bash -c "WANDB_MODE=offline ACCELERATE_LOG_LEVEL=info accelerate launch \
-                --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
-                --num_machines $SLURM_NNODES \
-                --num_processes $NUM_PROCS \
-                --main_process_ip $MASTER_ADDR \
-                --main_process_port $MASTER_PORT \
-                --machine_rank $SLURM_PROCID \
-                --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                scripts/run_online_dpo.py recipes/llama-3.2-1b/online_dpo/config_qlora.yaml > ${LOG_PATH} 2>&1"
+# srun -N "${SLURM_NNODES}" -l \
+#    bash -c "WANDB_MODE=offline ACCELERATE_LOG_LEVEL=info accelerate launch \
+WANDB_MODE=offline ACCELERATE_LOG_LEVEL=info accelerate launch \
+    --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
+    --num_machines $SLURM_NNODES \
+    --num_processes $NUM_PROCS \
+    --main_process_ip $MASTER_ADDR \
+    --main_process_port $MASTER_PORT \
+    --machine_rank $SLURM_PROCID \
+    --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
+    scripts/run_online_dpo.py recipes/llama-3.2-1b/online_dpo/config_qlora.yaml > ${LOG_PATH} 2>&1"
 
 

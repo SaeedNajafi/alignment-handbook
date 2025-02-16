@@ -21,7 +21,7 @@ lora_target_modules:
 
 # Data training arguments
 dataset_mixer:
-  /scratch/ssd004/scratch/snajafi/datasets/llama-3.2-1b-offline-preference-data: 1.0
+  /scratch/ssd004/scratch/snajafi/datasets/llama-3.2-1b-offline-preference-data/dataset: 1.0
 dataset_splits:
 - train
 - test
@@ -34,27 +34,26 @@ beta: 0.01
 do_eval: true
 eval_strategy: steps
 eval_steps: 100
-gradient_accumulation_steps: 4
-gradient_checkpointing: true
+gradient_accumulation_steps: 8
+gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
-# hub_model_id: zephyr-7b-dpo-qlora
 learning_rate: 5.0e-6
 log_level: info
 logging_steps: 5
 logging_strategy: steps
 lr_scheduler_type: cosine
-max_length: 2048
-max_prompt_length: 1535
-max_completion_length: 512
+max_length: 6144
+max_prompt_length: 2048
+max_completion_length: 4096
 num_train_epochs: 1
 dataset_num_proc: 8
 loss_type: sigmoid
 optim: adamw_8bit
 output_dir: /scratch/ssd004/scratch/snajafi/vector-backup/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-dpo-beta-0.01-lr-5.0e-6
 run_name: llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-dpo-beta-0.01-lr-5.0e-6
-per_device_train_batch_size: 2
-per_device_eval_batch_size: 2
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
 push_to_hub: false
 remove_unused_columns: true
 report_to:

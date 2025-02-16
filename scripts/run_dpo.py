@@ -38,12 +38,59 @@ from alignment import (
 )
 from peft import PeftConfig, PeftModel
 from trl import DPOTrainer
+import datasets
 
 from datetime import timedelta
 import torch.distributed as dist
 
 logger = logging.getLogger(__name__)
 
+def process_dataset(dataset, data_args, tokenizer):
+    column_names = list(dataset.features)
+    #####################
+    # Apply chat template
+    #####################
+    dataset = dataset.map(
+        apply_chat_template,
+        fn_kwargs={
+            "tokenizer": tokenizer,
+            "task": "dpo",
+            "auto_insert_empty_system_msg": data_args.auto_insert_empty_system_msg,
+        },
+        num_proc=data_args.preprocessing_num_workers,
+        remove_columns=column_names,
+        desc="Formatting comparisons with prompt template",
+    )
+
+    ##########################
+    # Decontaminate benchmarks
+    ##########################
+    num_raw_samples = len(dataset)
+    dataset = dataset.filter(
+        decontaminate_humaneval,
+        fn_kwargs={"text_column": "text_chosen"},
+        batched=True,
+        batch_size=10_000,
+        num_proc=1,
+        desc="Decontaminating HumanEval samples",
+    )
+    num_filtered_samples = num_raw_samples - len(dataset)
+    logger.info(
+        f"Decontaminated {num_filtered_samples} ({num_filtered_samples/num_raw_samples * 100:.2f}%) samples from the dataset."
+    )
+    # Replace column names with what TRL needs, text_chosen -> chosen and text_rejected -> rejected
+    dataset = dataset.rename_columns(
+            {"text_prompt": "prompt", "text_chosen": "chosen", "text_rejected": "rejected"}
+     )
+
+    # Log a few random samples from the training set:
+    for index in random.sample(range(len(dataset)), 3):
+        logger.info(f"Prompt sample {index} of the raw dataset:\n\n{dataset[index]['prompt']}")
+        logger.info(f"Chosen sample {index} of the raw dataset:\n\n{dataset[index]['chosen']}")
+        logger.info(f"Rejected sample {index} of the raw dataset:\n\n{dataset[index]['rejected']}")
+    
+    return dataset
+    
 
 def main():
     dist.init_process_group(backend='nccl', timeout=timedelta(seconds=360000))
@@ -81,16 +128,15 @@ def main():
     ###############
     # Load datasets
     ###############
-    raw_datasets = get_datasets(
-        data_args,
-        splits=data_args.dataset_splits,
-        configs=data_args.dataset_configs,
-        columns_to_keep=["messages", "chosen", "rejected", "prompt", "completion", "label"],
-    )
-    logger.info(
-        f"Training on the following splits: {[split + ' : ' + str(dset.num_rows) for split, dset in raw_datasets.items()]}"
-    )
-    column_names = list(raw_datasets["train"].features)
+    # raw_datasets = get_datasets(
+    #     data_args,
+    #     splits=data_args.dataset_splits,
+    #     configs=data_args.dataset_configs,
+    #     columns_to_keep=["messages", "chosen", "rejected", "prompt", "completion", "label"],
+    # )
+    # logger.info(
+    #     f"Training on the following splits: {[split + ' : ' + str(dset.num_rows) for split, dset in raw_datasets.items()]}"
+    # )
 
     #####################################
     # Load tokenizer and process datasets
@@ -98,50 +144,10 @@ def main():
     data_args.truncation_side = "left"  # Truncate from left to ensure we don't lose labels in final turn
     tokenizer = get_tokenizer(model_args, data_args)
 
-    #####################
-    # Apply chat template
-    #####################
-    raw_datasets = raw_datasets.map(
-        apply_chat_template,
-        fn_kwargs={
-            "tokenizer": tokenizer,
-            "task": "dpo",
-            "auto_insert_empty_system_msg": data_args.auto_insert_empty_system_msg,
-        },
-        num_proc=data_args.preprocessing_num_workers,
-        remove_columns=column_names,
-        desc="Formatting comparisons with prompt template",
-    )
-
-    ##########################
-    # Decontaminate benchmarks
-    ##########################
-    num_raw_train_samples = len(raw_datasets["train"])
-    raw_datasets = raw_datasets.filter(
-        decontaminate_humaneval,
-        fn_kwargs={"text_column": "text_chosen"},
-        batched=True,
-        batch_size=10_000,
-        num_proc=1,
-        desc="Decontaminating HumanEval samples",
-    )
-    num_filtered_train_samples = num_raw_train_samples - len(raw_datasets["train"])
-    logger.info(
-        f"Decontaminated {num_filtered_train_samples} ({num_filtered_train_samples/num_raw_train_samples * 100:.2f}%) samples from the training set."
-    )
-
-    # Replace column names with what TRL needs, text_chosen -> chosen and text_rejected -> rejected
-    for split in ["train", "test"]:
-        raw_datasets[split] = raw_datasets[split].rename_columns(
-            {"text_prompt": "prompt", "text_chosen": "chosen", "text_rejected": "rejected"}
-        )
-
-    # Log a few random samples from the training set:
-    for index in random.sample(range(len(raw_datasets["train"])), 3):
-        logger.info(f"Prompt sample {index} of the raw training set:\n\n{raw_datasets['train'][index]['prompt']}")
-        logger.info(f"Chosen sample {index} of the raw training set:\n\n{raw_datasets['train'][index]['chosen']}")
-        logger.info(f"Rejected sample {index} of the raw training set:\n\n{raw_datasets['train'][index]['rejected']}")
-
+    train_dataset = datasets.load_from_disk("/scratch/ssd004/scratch/snajafi/datasets/llama-3.2-1b-offline-preference-data/dataset/train")
+    eval_dataset = datasets.load_from_disk("/scratch/ssd004/scratch/snajafi/datasets/llama-3.2-1b-offline-preference-data/dataset/test")
+    train_dataset = process_dataset(train_dataset, data_args, tokenizer)
+    eval_dataset = process_dataset(eval_dataset, data_args, tokenizer)
     torch_dtype = (
         model_args.torch_dtype if model_args.torch_dtype in ["auto", None] else getattr(torch, model_args.torch_dtype)
     )
@@ -182,7 +188,7 @@ def main():
     #     model_kwargs = None
 
     model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
-    training_args.model_init_kwargs = model_kwargs
+    # training_args.model_init_kwargs = model_kwargs
     ref_model = model
     ref_model_kwargs = model_kwargs
 
@@ -196,17 +202,18 @@ def main():
     trainer = DPOTrainer(
         model,
         ref_model,
-        model_init_kwargs=model_kwargs,
-        ref_model_init_kwargs=ref_model_kwargs,
+        # model_init_kwargs=model_kwargs,
+        # ref_model_init_kwargs=ref_model_kwargs,
         args=training_args,
-        beta=training_args.beta,
-        train_dataset=raw_datasets["train"],
-        eval_dataset=raw_datasets["test"],
-        tokenizer=tokenizer,
-        max_length=training_args.max_length,
-        max_prompt_length=training_args.max_prompt_length,
+        # beta=training_args.beta,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+        # tokenizer=tokenizer,
+        processing_class=tokenizer,
+        # max_length=training_args.max_length,
+        # max_prompt_length=training_args.max_prompt_length,
         peft_config=get_peft_config(model_args),
-        loss_type=training_args.loss_type,
+        # loss_type=training_args.loss_type,
     )
 
     ###############
@@ -219,7 +226,7 @@ def main():
         checkpoint = last_checkpoint
     train_result = trainer.train(resume_from_checkpoint=checkpoint)
     metrics = train_result.metrics
-    metrics["train_samples"] = len(raw_datasets["train"])
+    metrics["train_samples"] = len(train_dataset)
     trainer.log_metrics("train", metrics)
     trainer.save_metrics("train", metrics)
     trainer.save_state()
@@ -234,14 +241,14 @@ def main():
     logger.info(f"Model saved to {training_args.output_dir}")
 
     # Save everything else on main process
-    kwargs = {
-        "finetuned_from": model_args.model_name_or_path,
-        "dataset": list(data_args.dataset_mixer.keys()),
-        "dataset_tags": list(data_args.dataset_mixer.keys()),
-        "tags": ["alignment-handbook-offline-dpo"],
-    }
+    # kwargs = {
+    #     "finetuned_from": model_args.model_name_or_path,
+    #     "dataset": list(data_args.dataset_mixer.keys()),
+    #     "dataset_tags": list(data_args.dataset_mixer.keys()),
+    #     "tags": ["alignment-handbook-offline-dpo"],
+    # }
     if trainer.accelerator.is_main_process:
-        trainer.create_model_card(**kwargs)
+        # trainer.create_model_card(**kwargs)
         # Restore k,v cache for fast inference
         trainer.model.config.use_cache = True
         trainer.model.config.save_pretrained(training_args.output_dir)
@@ -252,7 +259,7 @@ def main():
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
         metrics = trainer.evaluate()
-        metrics["eval_samples"] = len(raw_datasets["test"])
+        metrics["eval_samples"] = len(eval_dataset)
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
 

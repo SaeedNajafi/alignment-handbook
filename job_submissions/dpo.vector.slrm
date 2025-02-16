@@ -4,11 +4,11 @@
 # #SBATCH --account=rrg-afyshe
 #SBATCH --partition=a40
 #SBATCH --qos=normal
-#SBATCH --nodes=1
-#SBATCH --gpus-per-node=1
+#SBATCH --nodes=2
+#SBATCH --gpus-per-node=2
 #SBATCH --cpus-per-gpu=6
-#SBATCH --mem=32G
-#SBATCH --time=01:00:00
+#SBATCH --mem=64G
+#SBATCH --time=16:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
