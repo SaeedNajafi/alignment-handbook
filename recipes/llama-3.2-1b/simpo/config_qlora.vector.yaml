@@ -30,7 +30,8 @@ preprocessing_num_workers: 8
 # DPOTrainer arguments
 max_grad_norm: 1.0
 bf16: true
-beta: 0.05
+beta: 8.0
+gamma_beta_ratio: 0.1
 do_eval: true
 eval_strategy: steps
 eval_steps: 100
@@ -49,9 +50,11 @@ max_completion_length: 4096
 num_train_epochs: 1
 dataset_num_proc: 8
 loss_type: sigmoid
+objective_type: simpo
+average_logps: yes
 optim: adamw_8bit
-output_dir: /scratch/ssd004/scratch/snajafi/vector-backup/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-dpo-beta-0.05-lr-1.0e-6
-run_name: llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-dpo-beta-0.05-lr-1.0e-6
+output_dir: /scratch/ssd004/scratch/snajafi/vector-backup/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-simpo-beta-8.0-lr-1.0e-6-gamma-0.8
+run_name: llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-simpo-beta-8.0-lr-1.0e-6-gamma-0.8
 per_device_train_batch_size: 1
 per_device_eval_batch_size: 2
 push_to_hub: false
