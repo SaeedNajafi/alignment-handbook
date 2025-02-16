@@ -5,9 +5,9 @@
 #SBATCH --partition=a40
 #SBATCH --qos=normal
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=2
+#SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=6
-#SBATCH --mem=64G
+#SBATCH --mem=96G
 #SBATCH --time=16:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
