@@ -56,8 +56,8 @@ loss_type: sigmoid
 objective_type: mmpo
 average_logps: no
 optim: adamw_8bit
-output_dir: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-offline-mmpo-beta-1.0-lr-1.0e-6-re_ep_1.0-relu_coe-1.0-relu_eps-0.1
-run_name: llama3.2-1b-offline-mmpo-beta-1.0-lr-1.0e-6-re_ep_1.0-relu_coe-1.0-relu_eps-0.1
+output_dir: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-offline-mmpo-beta-0.05-lr-1.0e-6-re_ep_1.0-relu_coe-0.1-relu_eps-0.1
+run_name: llama3.2-1b-offline-mmpo-beta-0.05-lr-1.0e-6-re_ep_1.0-relu_coe-0.1-relu_eps-0.1
 per_device_train_batch_size: 1
 per_device_eval_batch_size: 2
 push_to_hub: false
