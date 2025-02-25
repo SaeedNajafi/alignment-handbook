@@ -144,8 +144,9 @@ def main():
     data_args.truncation_side = "left"  # Truncate from left to ensure we don't lose labels in final turn
     tokenizer = get_tokenizer(model_args, data_args)
 
-    train_dataset = datasets.load_from_disk("/home/saeednjf/nearline/rrg-afyshe/datasets/llama-3.2-1b-offline-preference-data/dataset/train")
-    eval_dataset = datasets.load_from_disk("/home/saeednjf/nearline/rrg-afyshe/datasets/llama-3.2-1b-offline-preference-data/dataset/test")
+    # train_dataset = datasets.load_from_disk("/work/saeed/narval/llama-3.2-1b-offline-preference-data/dataset/train")
+    train_dataset = datasets.load_from_disk("/work/saeed/narval/llama-3.2-1b-offline-preference-data/tuning_dataset")
+    eval_dataset = datasets.load_from_disk("/work/saeed/narval/llama-3.2-1b-offline-preference-data/dataset/test")
     train_dataset = process_dataset(train_dataset, data_args, tokenizer)
     eval_dataset = process_dataset(eval_dataset, data_args, tokenizer)
     torch_dtype = (
@@ -189,8 +190,10 @@ def main():
 
     model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
     # training_args.model_init_kwargs = model_kwargs
-    ref_model = model
-    ref_model_kwargs = model_kwargs
+    #ref_model = model
+    #ref_model_kwargs = model_kwargs
+    ref_model = None
+    ref_model_kwargs = None
 
     if model_args.use_peft is True:
         ref_model = None

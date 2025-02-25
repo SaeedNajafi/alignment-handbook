@@ -1,5 +1,5 @@
 # Model arguments
-model_name_or_path: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
+model_name_or_path: /work/saeed/narval/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
 torch_dtype: bfloat16
 model_revision: main
 attn_implementation: flash_attention_2
@@ -15,13 +15,13 @@ lora_target_modules:
 - k_proj
 - v_proj
 - o_proj
-# - gate_proj
-# - up_proj
-# - down_proj
+- gate_proj
+- up_proj
+- down_proj
 
 # Data training arguments
 dataset_mixer:
-  /home/saeednjf/nearline/rrg-afyshe/datasets/llama-3.2-1b-offline-preference-data: 1.0
+  /work/saeed/narval/llama-3.2-1b-offline-preference-data: 1.0
   
 dataset_splits:
 - train
@@ -33,11 +33,11 @@ max_grad_norm: 1.0
 bf16: true
 beta: 0.05
 mmpo_reward_epsilon: 1.0
-mmpo_relu_coefficient: 0.1
-mmpo_relu_epsilon: 0.1
+mmpo_relu_coefficient: 1.0
+mmpo_relu_epsilon: 2.0
 do_eval: true
 eval_strategy: steps
-eval_steps: 200
+eval_steps: 50
 gradient_accumulation_steps: 4
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
@@ -51,21 +51,21 @@ max_length: 6144
 max_prompt_length: 2048
 max_completion_length: 4096
 num_train_epochs: 1
-dataset_num_proc: 8
+dataset_num_proc: 128
 loss_type: sigmoid
 objective_type: mmpo
 average_logps: no
 optim: adamw_8bit
-output_dir: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-offline-mmpo-beta-0.05-lr-1.0e-6-re_ep_1.0-relu_coe-0.1-relu_eps-0.1
-run_name: llama3.2-1b-offline-mmpo-beta-0.05-lr-1.0e-6-re_ep_1.0-relu_coe-0.1-relu_eps-0.1
+output_dir: /work/saeed/narval/llama3.2-1b-offline-mmpo-beta-0.05-lr-1.0e-6-re_ep_1.0-relu_coe-1.0-relu_eps-2.0
+run_name: llama3.2-1b-offline-mmpo-beta-0.05-lr-1.0e-6-re_ep_1.0-relu_coe-1.0-relu_eps-2.0
 per_device_train_batch_size: 1
-per_device_eval_batch_size: 2
+per_device_eval_batch_size: 1
 push_to_hub: false
 remove_unused_columns: true
 report_to:
 - wandb
 save_strategy: "steps"
-save_steps: 200
+save_steps: 50
 save_total_limit: 20
 seed: 42
 warmup_ratio: 0.1
