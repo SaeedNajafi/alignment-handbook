@@ -16,7 +16,7 @@ NUM_GPUs=8
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="dpo-tuning"
+export WANDB_PROJECT="llama3-1b"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -30,7 +30,8 @@ echo "Placing logs in: ${LOG_DIR}"
 echo "GPUs per node: ${NUM_GPUs}"
 
 lrs=(0.0000005)
-betas=(0.05 0.1 0.5)
+# betas=(0.05 0.1 0.5)
+betas=(0.1)
 
 for l in ${!lrs[@]};
 do
@@ -38,7 +39,7 @@ do
     for b in ${!betas[@]};
     do
         beta=${betas[$b]}
-        RUN_NAME="llama3.2-1b-offline-dpo-tuning-beta-${beta}-lr-${lr}"
+        RUN_NAME="llama3.2-1b-offline-dpo-beta-${beta}-lr-${lr}"
         accelerate launch \
             --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
             --num_machines 1 \

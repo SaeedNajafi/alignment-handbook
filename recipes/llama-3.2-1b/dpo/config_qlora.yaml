@@ -33,7 +33,7 @@ bf16: true
 beta: 0.0
 do_eval: true
 eval_strategy: steps
-eval_steps: 20
+eval_steps: 50
 gradient_accumulation_steps: 4
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
@@ -45,7 +45,7 @@ lr_scheduler_type: cosine
 max_length: 6144
 max_prompt_length: 2048
 max_completion_length: 4096
-num_train_epochs: 1
+num_train_epochs: 3
 dataset_num_proc: 128
 loss_type: sigmoid
 objective_type: dpo
@@ -61,7 +61,7 @@ remove_unused_columns: true
 report_to:
 - wandb
 save_strategy: "steps"
-save_steps: 20
-save_total_limit: 1
+save_steps: 50
+save_total_limit: 20
 seed: 42
 warmup_ratio: 0.01
