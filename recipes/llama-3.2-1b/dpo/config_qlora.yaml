@@ -45,7 +45,7 @@ lr_scheduler_type: cosine
 max_length: 6144
 max_prompt_length: 2048
 max_completion_length: 4096
-num_train_epochs: 3
+num_train_epochs: 5
 dataset_num_proc: 128
 loss_type: sigmoid
 objective_type: dpo

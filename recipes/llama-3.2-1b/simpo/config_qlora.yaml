@@ -1,5 +1,5 @@
 # Model arguments
-model_name_or_path: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
+model_name_or_path: /work/saeed/narval/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
 torch_dtype: bfloat16
 model_revision: main
 attn_implementation: flash_attention_2
@@ -20,22 +20,22 @@ lora_target_modules:
 # - down_proj
 
 # Data training arguments
-dataset_mixer:
-  /home/saeednjf/nearline/rrg-afyshe/datasets/llama-3.2-1b-offline-preference-data: 1.0
+# dataset_mixer:
+#   /home/saeednjf/nearline/rrg-afyshe/datasets/llama-3.2-1b-offline-preference-data: 1.0
   
-dataset_splits:
-- train
-- test
-preprocessing_num_workers: 8
+# dataset_splits:
+# - train
+# - test
+# preprocessing_num_workers: 8
 
 # DPOTrainer arguments
 max_grad_norm: 1.0
 bf16: true
-beta: 8.0
-gamma_beta_ratio: 0.1
+beta: 0
+gamma_beta_ratio: 0
 do_eval: true
 eval_strategy: steps
-eval_steps: 200
+eval_steps: 10
 gradient_accumulation_steps: 4
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
@@ -49,21 +49,21 @@ max_length: 6144
 max_prompt_length: 2048
 max_completion_length: 4096
 num_train_epochs: 1
-dataset_num_proc: 8
+dataset_num_proc: 128
 loss_type: sigmoid
 objective_type: simpo
 average_logps: yes
 optim: adamw_8bit
-output_dir: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-simpo-beta-8.0-lr-1.0e-6-gamma-0.8
-run_name: llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-simpo-beta-8.0-lr-1.0e-6-gamma-0.8
-per_device_train_batch_size: 1
+output_dir: dummy
+run_name: dummy
+per_device_train_batch_size: 2
 per_device_eval_batch_size: 2
 push_to_hub: false
 remove_unused_columns: true
 report_to:
 - wandb
 save_strategy: "steps"
-save_steps: 200
-save_total_limit: 20
+save_steps: 50
+save_total_limit: 1
 seed: 42
-warmup_ratio: 0.1
+warmup_ratio: 0.01
