@@ -7,8 +7,8 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
-NUM_GPUs=8
+export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5"
+NUM_GPUs=6
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
 # export NCCL_DEBUG=WARN
@@ -30,7 +30,7 @@ echo "Placing logs in: ${LOG_DIR}"
 echo "GPUs per node: ${NUM_GPUs}"
 
 lrs=(0.0000003 0.0000005 0.0000006)
-betas=(0.25 0.5 1.0 7.5)
+betas=(7.5)
 
 for l in ${!lrs[@]};
 do

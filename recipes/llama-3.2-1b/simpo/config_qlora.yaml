@@ -36,7 +36,7 @@ gamma_beta_ratio: 0
 do_eval: true
 eval_strategy: steps
 eval_steps: 10
-gradient_accumulation_steps: 4
+gradient_accumulation_steps: 5
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
