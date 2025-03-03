@@ -15,26 +15,26 @@ lora_target_modules:
 - k_proj
 - v_proj
 - o_proj
-- gate_proj
-- up_proj
-- down_proj
+# - gate_proj
+# - up_proj
+# - down_proj
 
 # Data training arguments
-dataset_mixer:
-  /work/saeed/narval/llama-3.2-1b-offline-preference-data: 1.0
+# dataset_mixer:
+#   /work/saeed/narval/llama-3.2-1b-offline-preference-data: 1.0
   
-dataset_splits:
-- train
-- test
-preprocessing_num_workers: 8
+# dataset_splits:
+# - train
+# - test
+# preprocessing_num_workers: 8
 
 # DPOTrainer arguments
 max_grad_norm: 1.0
 bf16: true
-beta: 0.05
-mmpo_reward_epsilon: 1.0
+beta: 0.0
+mmpo_reward_epsilon: 0.0
 mmpo_relu_coefficient: 1.0
-mmpo_relu_epsilon: 2.0
+mmpo_relu_epsilon: 0.5
 do_eval: true
 eval_strategy: steps
 eval_steps: 50
@@ -50,16 +50,16 @@ lr_scheduler_type: cosine
 max_length: 6144
 max_prompt_length: 2048
 max_completion_length: 4096
-num_train_epochs: 1
+num_train_epochs: 5
 dataset_num_proc: 128
 loss_type: sigmoid
 objective_type: mmpo
 average_logps: no
 optim: adamw_8bit
-output_dir: /work/saeed/narval/llama3.2-1b-offline-mmpo-beta-0.05-lr-1.0e-6-re_ep_1.0-relu_coe-1.0-relu_eps-2.0
-run_name: llama3.2-1b-offline-mmpo-beta-0.05-lr-1.0e-6-re_ep_1.0-relu_coe-1.0-relu_eps-2.0
-per_device_train_batch_size: 1
-per_device_eval_batch_size: 1
+output_dir: dummy
+run_name: dummy
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 2
 push_to_hub: false
 remove_unused_columns: true
 report_to:
@@ -68,4 +68,4 @@ save_strategy: "steps"
 save_steps: 50
 save_total_limit: 20
 seed: 42
-warmup_ratio: 0.1
+warmup_ratio: 0.01
