@@ -31,16 +31,16 @@ lora_target_modules:
 # DPOTrainer arguments
 max_grad_norm: 1.0
 bf16: true
-beta: 0
-gamma_beta_ratio: 0
+beta: 7.5
+gamma_beta_ratio: 1.6
 do_eval: true
 eval_strategy: steps
-eval_steps: 10
-gradient_accumulation_steps: 5
+eval_steps: 50
+gradient_accumulation_steps: 4
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
-learning_rate: 1.0e-6
+learning_rate: 6.0e-7
 log_level: info
 logging_steps: 5
 logging_strategy: steps
@@ -48,7 +48,7 @@ lr_scheduler_type: cosine
 max_length: 6144
 max_prompt_length: 2048
 max_completion_length: 4096
-num_train_epochs: 1
+num_train_epochs: 5
 dataset_num_proc: 128
 loss_type: sigmoid
 objective_type: simpo
@@ -64,6 +64,6 @@ report_to:
 - wandb
 save_strategy: "steps"
 save_steps: 50
-save_total_limit: 1
+save_total_limit: 20
 seed: 42
 warmup_ratio: 0.01

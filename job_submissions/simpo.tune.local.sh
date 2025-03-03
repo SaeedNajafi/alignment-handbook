@@ -16,7 +16,7 @@ NUM_GPUs=8
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="simpo-tuning"
+export WANDB_PROJECT="llama3-1b"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -31,7 +31,7 @@ echo "GPUs per node: ${NUM_GPUs}"
 
 lrs=(0.0000006)
 betas=(7.5)
-gammas=(0.2 0.4 0.6 0.8 1.0 1.2 1.4 1.6)
+gammas=(1.6)
 
 for g in ${!gammas[@]};
 do
