@@ -46,7 +46,7 @@ do
             for b in ${!betas[@]};
             do
                 beta=${betas[$b]}
-                RUN_NAME="llama3.2-1b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}"
+                RUN_NAME="llama3.2-1b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-new-loss"
                 accelerate launch \
                     --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
                     --num_machines 1 \
