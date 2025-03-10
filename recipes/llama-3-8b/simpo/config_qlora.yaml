@@ -1,5 +1,5 @@
 # Model arguments
-model_name_or_path: /work/saeed/narval/Llama-3-Base-8B-SFT
+model_name_or_path: /home/ubuntu/data/Llama-3-Base-8B-SFT
 torch_dtype: bfloat16
 model_revision: main
 attn_implementation: flash_attention_2

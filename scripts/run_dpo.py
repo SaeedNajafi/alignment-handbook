@@ -144,9 +144,9 @@ def main():
     data_args.truncation_side = "left"  # Truncate from left to ensure we don't lose labels in final turn
     tokenizer = get_tokenizer(model_args, data_args)
 
-    train_dataset = datasets.load_from_disk("/work/saeed/narval/llama-3-8b-offline-preference-data/train")
+    train_dataset = datasets.load_from_disk("/home/ubuntu/data/8b-data/train")
     # train_dataset = datasets.load_from_disk("/work/saeed/narval/llama-3.2-1b-offline-preference-data/tuning_dataset")
-    eval_dataset = datasets.load_from_disk("/work/saeed/narval/llama-3-8b-offline-preference-data/test")
+    eval_dataset = datasets.load_from_disk("/home/ubuntu/data/8b-data/test")
     train_dataset = process_dataset(train_dataset, data_args, tokenizer)
     eval_dataset = process_dataset(eval_dataset, data_args, tokenizer)
     torch_dtype = (

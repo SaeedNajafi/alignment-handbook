@@ -7,8 +7,8 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-export CUDA_VISIBLE_DEVICES="2,3,4,5,6,7"
-NUM_GPUs=6
+export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
+NUM_GPUs=8
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
 # export NCCL_DEBUG=WARN
@@ -16,7 +16,7 @@ NUM_GPUs=6
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3-1b"
+export WANDB_PROJECT="llama3-8b"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -46,7 +46,7 @@ do
             for b in ${!betas[@]};
             do
                 beta=${betas[$b]}
-                RUN_NAME="llama3.2-1b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-new-loss-clipped"
+                RUN_NAME="llama3-8b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-new-loss-clipped"
                 accelerate launch \
                     --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
                     --num_machines 1 \
@@ -55,12 +55,12 @@ do
                     --main_process_port $MASTER_PORT \
                     --machine_rank 0 \
                     --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                    scripts/run_dpo.py recipes/llama-3.2-1b/mmpo/config_qlora.yaml \
+                    scripts/run_dpo.py recipes/llama-3-8b/mmpo/config_qlora.yaml \
                         --learning_rate=${lr} \
                         --beta=${beta} \
                         --mmpo_reward_epsilon=${r_eps} \
                         --mmpo_relu_epsilon=${r_relu_eps} \
-                        --output_dir=/work/saeed/mmpo_tuning/${RUN_NAME} \
+                        --output_dir=/home/ubuntu/data/mmpo_8b_tuning/${RUN_NAME} \
                         --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
             done
         done

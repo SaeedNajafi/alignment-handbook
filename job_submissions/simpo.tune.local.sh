@@ -55,7 +55,7 @@ do
                     --learning_rate=${lr} \
                     --beta=${beta} \
                     --gamma_beta_ratio=${gamma} \
-                    --output_dir=/work/saeed/narval/simpo_8b_tuning/${RUN_NAME} \
+                    --output_dir=/home/ubuntu/data/simpo_8b_tuning/${RUN_NAME} \
                     --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
         done
     done
