@@ -16,13 +16,13 @@ NUM_GPUs=8
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3-1b"
+export WANDB_PROJECT="llama3-8b"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
 NUM_PROCS=${NUM_GPUs}
 
-LOG_DIR="dpo_training_logs"
+LOG_DIR="dpo_8b_training_logs"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
 
@@ -31,7 +31,7 @@ echo "GPUs per node: ${NUM_GPUs}"
 
 lrs=(0.0000005)
 # betas=(0.05 0.1 0.5)
-betas=(0.1)
+betas=(0.01)
 
 for l in ${!lrs[@]};
 do
@@ -39,7 +39,7 @@ do
     for b in ${!betas[@]};
     do
         beta=${betas[$b]}
-        RUN_NAME="llama3.2-1b-offline-dpo-beta-${beta}-lr-${lr}"
+        RUN_NAME="llama3-8b-offline-dpo-beta-${beta}-lr-${lr}"
         accelerate launch \
             --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
             --num_machines 1 \
@@ -48,10 +48,10 @@ do
             --main_process_port $MASTER_PORT \
             --machine_rank 0 \
             --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-            scripts/run_dpo.py recipes/llama-3.2-1b/dpo/config_qlora.yaml \
+            scripts/run_dpo.py recipes/llama-3-8b/dpo/config_qlora.yaml \
                 --learning_rate=${lr} \
                 --beta=${beta} \
-                --output_dir=/work/saeed/narval/dpo_tuning/${RUN_NAME} \
+                --output_dir=/work/saeed/narval/dpo_8b_tuning/${RUN_NAME} \
                 --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
     done
 done

@@ -30,7 +30,7 @@ inputs = [data["prompt"] for data in output_data]
 candidates_texts = [data["all_generated_responses"] for data in output_data]
 
 model = AutoModelForSequenceClassification.from_pretrained(args.reward_model, 
-                                                           device_map="auto",
+                                                           device_map="cuda:0",
                                                            attn_implementation="flash_attention_2",
                                                            trust_remote_code=True, torch_dtype=torch.bfloat16)
 tokenizer = AutoTokenizer.from_pretrained(args.reward_model, use_fast=True)
