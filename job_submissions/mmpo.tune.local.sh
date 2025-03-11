@@ -60,7 +60,7 @@ do
                         --beta=${beta} \
                         --mmpo_reward_epsilon=${r_eps} \
                         --mmpo_relu_epsilon=${r_relu_eps} \
-                        --output_dir=/home/ubuntu/data/mmpo_8b_tuning/${RUN_NAME} \
+                        --output_dir=/work/saeed/narval/mmpo_8b_tuning_old_loss/${RUN_NAME} \
                         --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
             done
         done
