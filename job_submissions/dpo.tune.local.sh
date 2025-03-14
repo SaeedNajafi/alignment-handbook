@@ -16,7 +16,7 @@ NUM_GPUs=8
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3-8b"
+export WANDB_PROJECT="llama3-8b-full"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -39,7 +39,7 @@ do
     for b in ${!betas[@]};
     do
         beta=${betas[$b]}
-        RUN_NAME="llama3-8b-offline-dpo-beta-${beta}-lr-${lr}"
+        RUN_NAME="llama3-8b-offline-dpo-beta-${beta}-lr-${lr}-full"
         accelerate launch \
             --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
             --num_machines 1 \
@@ -51,7 +51,7 @@ do
             scripts/run_dpo.py recipes/llama-3-8b/dpo/config_qlora.yaml \
                 --learning_rate=${lr} \
                 --beta=${beta} \
-                --output_dir=/work/saeed/narval/dpo_8b_tuning/${RUN_NAME} \
+                --output_dir=/work/saeed/narval/dpo_8b_full/${RUN_NAME} \
                 --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
     done
 done

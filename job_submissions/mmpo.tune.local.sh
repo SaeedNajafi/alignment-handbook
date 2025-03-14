@@ -16,7 +16,7 @@ NUM_GPUs=8
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3-8b"
+export WANDB_PROJECT="llama3-8b-full"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -46,7 +46,7 @@ do
             for b in ${!betas[@]};
             do
                 beta=${betas[$b]}
-                RUN_NAME="llama3-8b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-new-loss-clipped"
+                RUN_NAME="llama3-8b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-full_standard_log-without-relu"
                 accelerate launch \
                     --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
                     --num_machines 1 \
@@ -60,7 +60,7 @@ do
                         --beta=${beta} \
                         --mmpo_reward_epsilon=${r_eps} \
                         --mmpo_relu_epsilon=${r_relu_eps} \
-                        --output_dir=/work/saeed/narval/mmpo_8b_tuning_old_loss/${RUN_NAME} \
+                        --output_dir=/work/saeed/narval/mmpo_8b_full_standard_log_without_relu/${RUN_NAME} \
                         --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
             done
         done

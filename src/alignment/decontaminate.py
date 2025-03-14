@@ -25,8 +25,8 @@ try:
     ds = load_dataset("openai_humaneval", split="test")
     openai_humaneval_address = "openai_humaneval"
 except Exception:
-    ds = load_dataset("/home/saeednjf/nearline/rrg-afyshe/datasets/openai_humaneval", split="test")
-    openai_humaneval_address = "/home/saeednjf/nearline/rrg-afyshe/datasets/openai_humaneval"
+    ds = load_dataset("/work/saeed/narval/openai_humaneval", split="test")
+    openai_humaneval_address = "/work/saeed/narval/openai_humaneval"
 
 def extract_docstring(prompt: str) -> str:
     if '"""' in prompt:
