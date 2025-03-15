@@ -1,11 +1,11 @@
 # Model arguments
-model_name_or_path: /work/saeed/narval/Llama-3-Base-8B-SFT
+model_name_or_path: /scratch/ssd004/scratch/snajafi/model-weights/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
 torch_dtype: bfloat16
 model_revision: main
 attn_implementation: flash_attention_2
 
 # LoRA arguments
-use_peft: false
+use_peft: true
 load_in_4bit: false
 lora_r: 64
 lora_alpha: 64
@@ -15,9 +15,17 @@ lora_target_modules:
 - k_proj
 - v_proj
 - o_proj
-# - gate_proj
-# - up_proj
-# - down_proj
+- gate_proj
+- up_proj
+- down_proj
+lora_modules_to_save:
+- q_proj
+- k_proj
+- v_proj
+- o_proj
+- gate_proj
+- up_proj
+- down_proj
 
 # Data training arguments
 # dataset_mixer:
@@ -54,7 +62,7 @@ output_dir: dummy
 run_name: dummy
 optim: adamw_8bit
 per_device_train_batch_size: 1
-per_device_eval_batch_size: 2
+per_device_eval_batch_size: 1
 push_to_hub: false
 remove_unused_columns: true
 report_to:

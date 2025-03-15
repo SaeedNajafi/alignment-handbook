@@ -1,14 +1,14 @@
 #!/bin/bash
 
 #SBATCH --job-name=offline-mmpo-exp
-#SBATCH --account=rrg-afyshe
-# #SBATCH --partition=a40
-# #SBATCH --qos=m
+# #SBATCH --account=rrg-afyshe
+#SBATCH --partition=a40
+#SBATCH --qos=m
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=8
-#SBATCH --mem=128G
-#SBATCH --time=0-12:00:00
+#SBATCH --cpus-per-gpu=6
+#SBATCH --mem=96G
+#SBATCH --time=12:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -31,8 +31,24 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-LOG_DIR="training_logs"
-LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}.log"
+lr=0.000001
+beta=0.1
+mmpo_relu_epsilon=0.5
+reward_epsilon=0.0
+RUN_NAME="llama3-1b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${reward_epsilon}-relu-epsilon-${mmpo_relu_epsilon}"
+
+# export TORCH_DISTRIBUTED_DEBUG=DETAIL
+# export NCCL_DEBUG=WARN
+# export NCCL_DEBUG_SUBSYS=WARN
+# export TORCH_CPP_LOG_LEVEL=INFO
+# export LOGLEVEL=INFO
+export NCCL_ASYNC_ERROR_HANDLING=1
+export WANDB_PROJECT="llama3-1b-v2"
+export WANDB_MODE="offline"
+export ACCELERATE_LOG_LEVEL="info"
+
+LOG_DIR="mmpo_1b_training_logs"
+LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}_run_${RUN_NAME}.log"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
 
@@ -44,25 +60,23 @@ nvidia-smi
 NUM_GPUs=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 echo "GPUs per node: ${NUM_GPUs}"
 
-# export TORCH_DISTRIBUTED_DEBUG=DETAIL
-# export NCCL_DEBUG=WARN
-# export NCCL_DEBUG_SUBSYS=WARN
-# export TORCH_CPP_LOG_LEVEL=INFO
-# export LOGLEVEL=INFO
-export NCCL_ASYNC_ERROR_HANDLING=1
-
-
 NUM_PROCS=$((NUM_GPUs*SLURM_NNODES))
 
 srun -N "${SLURM_NNODES}" -l \
-    bash -c "WANDB_MODE=offline ACCELERATE_LOG_LEVEL=info accelerate launch \
-                --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
-                --num_machines $SLURM_NNODES \
-                --num_processes $NUM_PROCS \
-                --main_process_ip $MASTER_ADDR \
-                --main_process_port $MASTER_PORT \
-                --machine_rank $SLURM_PROCID \
-                --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                scripts/run_dpo.py recipes/llama-3.2-1b/mmpo/config_qlora.yaml > ${LOG_PATH} 2>&1"
+    bash -c "accelerate launch \
+            --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
+            --num_machines $SLURM_NNODES \
+            --num_processes $NUM_PROCS \
+            --main_process_ip $MASTER_ADDR \
+            --main_process_port $MASTER_PORT \
+            --machine_rank $SLURM_PROCID \
+            --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
+            scripts/run_dpo.py recipes/llama-3.2-1b/mmpo/config_qlora.yaml \
+            --learning_rate=${lr} \
+            --beta=${beta} \
+            --mmpo_reward_epsilon=${reward_epsilon} \
+            --mmpo_relu_epsilon=${mmpo_relu_epsilon} \
+            --output_dir=/scratch/ssd004/scratch/snajafi/vector-backup/mmpo_1b_v2/${RUN_NAME} \
+            --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1"
 
 

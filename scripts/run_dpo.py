@@ -128,15 +128,15 @@ def main():
     ###############
     # Load datasets
     ###############
-    # raw_datasets = get_datasets(
-    #     data_args,
-    #     splits=data_args.dataset_splits,
-    #     configs=data_args.dataset_configs,
-    #     columns_to_keep=["messages", "chosen", "rejected", "prompt", "completion", "label"],
-    # )
-    # logger.info(
-    #     f"Training on the following splits: {[split + ' : ' + str(dset.num_rows) for split, dset in raw_datasets.items()]}"
-    # )
+    raw_datasets = get_datasets(
+        data_args,
+        splits=data_args.dataset_splits,
+        configs=data_args.dataset_configs,
+        columns_to_keep=["messages", "chosen", "rejected", "prompt", "completion", "label"],
+    )
+    logger.info(
+        f"Training on the following splits: {[split + ' : ' + str(dset.num_rows) for split, dset in raw_datasets.items()]}"
+    )
 
     #####################################
     # Load tokenizer and process datasets
@@ -144,9 +144,11 @@ def main():
     data_args.truncation_side = "left"  # Truncate from left to ensure we don't lose labels in final turn
     tokenizer = get_tokenizer(model_args, data_args)
 
-    train_dataset = datasets.load_from_disk("/work/saeed/narval/preference-data/train")
+    # train_dataset = datasets.load_from_disk("/work/saeed/narval/preference-data/train")
     # train_dataset = datasets.load_from_disk("/work/saeed/narval/llama-3.2-1b-offline-preference-data/tuning_dataset")
-    eval_dataset = datasets.load_from_disk("/work/saeed/narval/preference-data/test")
+    # eval_dataset = datasets.load_from_disk("/work/saeed/narval/preference-data/test")
+    train_dataset = raw_datasets["train"]
+    eval_dataset = raw_datasets["test"]
     train_dataset = process_dataset(train_dataset, data_args, tokenizer)
     eval_dataset = process_dataset(eval_dataset, data_args, tokenizer)
     torch_dtype = (

@@ -213,7 +213,8 @@ def mix_datasets(
         for split in splits:
             try:
                 # Try first if dataset on a Hub repo
-                dataset = load_dataset(ds, ds_config, split=split)
+                # dataset = load_dataset(ds, ds_config, split=split)
+                dataset = load_from_disk(os.path.join(ds, split))
             except DatasetGenerationError:
                 # If not, check local dataset
                 dataset = load_from_disk(os.path.join(ds, split))
