@@ -3,12 +3,12 @@
 #SBATCH --job-name=offline-mmpo-exp
 # #SBATCH --account=rrg-afyshe
 #SBATCH --partition=a40
-#SBATCH --qos=m
+#SBATCH --qos=normal
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=6
 #SBATCH --mem=96G
-#SBATCH --time=12:00:00
+#SBATCH --time=16:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
