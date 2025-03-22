@@ -51,7 +51,7 @@ do
             scripts/run_dpo.py recipes/llama-3.2-1b/dpo/config_qlora.yaml \
                 --learning_rate=${lr} \
                 --beta=${beta} \
-                --output_dir=/scratch/ssd004/scratch/snajafi/vector-backup/dpo_1b_lora_v2/${RUN_NAME} \
+                --output_dir=/scratch/ssd004/scratch/snajafi/vector-backup/dpo_1b_v2/${RUN_NAME} \
                 --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
     done
 done
