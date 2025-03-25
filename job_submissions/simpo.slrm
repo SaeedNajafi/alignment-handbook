@@ -1,14 +1,14 @@
 #!/bin/bash
 
 #SBATCH --job-name=offline-simpo-exp
-# #SBATCH --account=rrg-afyshe
-#SBATCH --partition=a40
-#SBATCH --qos=m
+#SBATCH --account=rrg-afyshe
+# #SBATCH --partition=a40
+# #SBATCH --qos=m
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=6
-#SBATCH --mem=96G
-#SBATCH --time=12:00:00
+#SBATCH --cpus-per-gpu=8
+#SBATCH --mem=128G
+#SBATCH --time=04:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -31,10 +31,8 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-lr=0.0000006
+lr=0.000001
 beta=2.0
-#lr=0.0000005
-#beta=0.01
 gamma_to_beta=0.5
 RUN_NAME="llama3-1b-offline-simpo-tuning-beta-${beta}-lr-${lr}-gamma-to-beta-${gamma}-v2"
 
@@ -44,7 +42,7 @@ RUN_NAME="llama3-1b-offline-simpo-tuning-beta-${beta}-lr-${lr}-gamma-to-beta-${g
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3-1b-v2"
+export WANDB_PROJECT="llama3-1b-v4"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -72,11 +70,11 @@ srun -N "${SLURM_NNODES}" -l \
                 --main_process_port $MASTER_PORT \
                 --machine_rank $SLURM_PROCID \
                 --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                scripts/run_dpo.py recipes/llama-3.2-1b/simpo/config_qlora.yaml \
+                scripts/run_dpo.py recipes/llama-3.2-1b/simpo/config_qlora.narval.yaml \
                 --learning_rate=${lr} \
                 --beta=${beta} \
                 --gamma_beta_ratio=${gamma_to_beta} \
-                --output_dir=/scratch/ssd004/scratch/snajafi/vector-backup/simpo_1b_v2/${RUN_NAME} \
+                --output_dir=/home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/simpo_1b_v4/${RUN_NAME} \
                 --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1"
 
 

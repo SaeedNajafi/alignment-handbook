@@ -45,7 +45,7 @@ _deps = [
     "bitsandbytes>=0.43.0",
     "black>=24.4.2",
     "datasets>=2.18.0",
-    "deepspeed>=0.14.4",
+    "deepspeed==0.15.4",
     "einops>=0.6.1",
     "evaluate==0.4.0",
     "flake8>=6.0.0",

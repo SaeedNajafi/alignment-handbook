@@ -88,8 +88,8 @@ def apply_chat_template(
                 rejected_messages = example["rejected"][-1:]
 
             # # Prepend a system message if the first message is not a system message
-            if auto_insert_empty_system_msg:
-                maybe_insert_system_message(prompt_messages, tokenizer)
+            # if auto_insert_empty_system_msg:
+            #    maybe_insert_system_message(prompt_messages, tokenizer)
 
             example["text_prompt"] = tokenizer.apply_chat_template(prompt_messages, tokenize=False)
             example["text_chosen"] = tokenizer.apply_chat_template(chosen_messages, tokenize=False)
@@ -213,8 +213,8 @@ def mix_datasets(
         for split in splits:
             try:
                 # Try first if dataset on a Hub repo
-                dataset = load_dataset(ds, ds_config, split=split)
-                # dataset = load_from_disk(os.path.join(ds, split))
+                # dataset = load_dataset(ds, ds_config, split=split)
+                dataset = load_from_disk(os.path.join(ds, split))
             except DatasetGenerationError:
                 # If not, check local dataset
                 dataset = load_from_disk(os.path.join(ds, split))

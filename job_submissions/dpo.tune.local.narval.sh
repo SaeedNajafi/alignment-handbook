@@ -16,7 +16,7 @@ NUM_GPUs=1
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3-1b-v2"
+export WANDB_PROJECT="llama3-1b-v3"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -48,10 +48,10 @@ do
             --main_process_port $MASTER_PORT \
             --machine_rank 0 \
             --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-            scripts/run_dpo.py recipes/llama-3.2-1b/dpo/config_qlora.yaml \
+            scripts/run_dpo.py recipes/llama-3.2-1b/dpo/config_qlora.narval.yaml \
                 --learning_rate=${lr} \
                 --beta=${beta} \
-                --output_dir=/scratch/ssd004/scratch/snajafi/vector-backup/dpo_1b_v2/${RUN_NAME} \
+                --output_dir=/home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/dpo_1b_v2/${RUN_NAME} \
                 --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
     done
 done

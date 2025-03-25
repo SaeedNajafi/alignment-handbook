@@ -201,6 +201,8 @@ def main():
         ref_model = None
         ref_model_kwargs = None
 
+    training_args.packing = False
+
     #########################
     # Instantiate DPO trainer
     #########################
