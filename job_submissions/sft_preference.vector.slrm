@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH --job-name=offline-dpo-exp
-#SBATCH --account=rrg-afyshe
-# #SBATCH --partition=a40
-# #SBATCH --qos=m2
+#SBATCH --job-name=offline-sft-pref-exp
+# #SBATCH --account=rrg-afyshe
+#SBATCH --partition=a40
+#SBATCH --qos=m2
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=8
-#SBATCH --mem=128G
+#SBATCH --cpus-per-gpu=4
+#SBATCH --mem=64G
 #SBATCH --time=08:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
@@ -31,11 +31,8 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-
-lr=0.0007
-beta=0.01
-RUN_NAME="llama3-1b-offline-dpo-beta-${beta}-lr-${lr}-v4"
-
+lr=0.0001
+RUN_NAME="llama3-1b-offline-sft-pref-tuning-lr-${lr}-v4"
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
 # export NCCL_DEBUG=WARN
@@ -47,7 +44,7 @@ export WANDB_PROJECT="llama3-1b-v4"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
-LOG_DIR="dpo_1b_training_logs"
+LOG_DIR="sft_pref_1b_training_logs"
 LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}_run_${RUN_NAME}.log"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
@@ -71,10 +68,7 @@ srun -N "${SLURM_NNODES}" -l \
                 --main_process_port $MASTER_PORT \
                 --machine_rank $SLURM_PROCID \
                 --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                scripts/run_dpo.py recipes/llama-3.2-1b/dpo/config_qlora.narval.yaml \
+                scripts/run_dpo.py recipes/llama-3.2-1b/sft_preference/config_qlora.vector.yaml \
                 --learning_rate=${lr} \
-                --beta=${beta} \
-                --output_dir=/home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/dpo_1b_v4/${RUN_NAME} \
+                --output_dir=/scratch/ssd004/scratch/snajafi/vector-backup/mmpo-experiments/sft_prefs_1b_v4/${RUN_NAME} \
                 --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1"
-
-

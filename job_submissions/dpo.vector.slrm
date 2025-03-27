@@ -1,13 +1,13 @@
 #!/bin/bash
 
 #SBATCH --job-name=offline-dpo-exp
-#SBATCH --account=rrg-afyshe
-# #SBATCH --partition=a40
-# #SBATCH --qos=m2
+# #SBATCH --account=rrg-afyshe
+#SBATCH --partition=a40
+#SBATCH --qos=m2
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=8
-#SBATCH --mem=128G
+#SBATCH --cpus-per-gpu=4
+#SBATCH --mem=64G
 #SBATCH --time=08:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
@@ -71,10 +71,10 @@ srun -N "${SLURM_NNODES}" -l \
                 --main_process_port $MASTER_PORT \
                 --machine_rank $SLURM_PROCID \
                 --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                scripts/run_dpo.py recipes/llama-3.2-1b/dpo/config_qlora.narval.yaml \
+                scripts/run_dpo.py recipes/llama-3.2-1b/dpo/config_qlora.vector.yaml \
                 --learning_rate=${lr} \
                 --beta=${beta} \
-                --output_dir=/home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/dpo_1b_v4/${RUN_NAME} \
+                --output_dir=/scratch/ssd004/scratch/snajafi/vector-backup/mmpo-experiments/dpo_1b_v4/${RUN_NAME} \
                 --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1"
 
 
