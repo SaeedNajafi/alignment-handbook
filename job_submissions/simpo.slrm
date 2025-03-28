@@ -31,10 +31,10 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-lr=0.000001
-beta=2.0
+lr=0.0007
+beta=10.0
 gamma_to_beta=0.5
-RUN_NAME="llama3-1b-offline-simpo-tuning-beta-${beta}-lr-${lr}-gamma-to-beta-${gamma}-v2"
+RUN_NAME="llama3-1b-offline-simpo-tuning-beta-${beta}-lr-${lr}-gamma-to-beta-${gamma}-v4"
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
 # export NCCL_DEBUG=WARN
