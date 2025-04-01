@@ -49,7 +49,7 @@ num_train_epochs: 3
 dataset_num_proc: 16
 loss_type: sigmoid
 objective_type: simpo
-average_logps: yes
+average_logps: no
 optim: adamw_8bit
 learning_rate: 10
 output_dir: dummy

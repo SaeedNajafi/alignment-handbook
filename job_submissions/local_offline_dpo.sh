@@ -12,7 +12,7 @@ echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
 lr=0.0003
 beta=0.01
-RUN_NAME="llama3.2-1b-offline-dpo-beta-${beta}-lr-${lr}-v5"
+RUN_NAME="llama3.2-1b-offline-dpo-beta-${beta}-lr-${lr}-with-length-norm-v5"
 
 export CUDA_VISIBLE_DEVICES="4,5"
 NUM_GPUs=2

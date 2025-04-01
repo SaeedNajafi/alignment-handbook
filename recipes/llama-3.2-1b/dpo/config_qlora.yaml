@@ -48,7 +48,7 @@ num_train_epochs: 3
 dataset_num_proc: 16
 loss_type: sigmoid
 objective_type: dpo
-average_logps: no
+average_logps: yes
 learning_rate: 10
 output_dir: dummy
 run_name: dummy

@@ -13,9 +13,9 @@ echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 lr=0.0007
 beta=0.01
 gamma_to_beta=1.4
-RUN_NAME="llama3.2-1b-offline-simpo-${beta}-lr-${lr}-gamma-to-beta-${gamma_to_beta}-v5"
+RUN_NAME="llama3.2-1b-offline-simpo-${beta}-lr-${lr}-gamma-to-beta-${gamma_to_beta}-no-length-norm-v5"
 
-export CUDA_VISIBLE_DEVICES="4,5"
+export CUDA_VISIBLE_DEVICES="6,7"
 NUM_GPUs=2
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
