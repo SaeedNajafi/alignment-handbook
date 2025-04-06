@@ -38,7 +38,7 @@ mmpo_relu_epsilon: 0.5
 do_eval: true
 eval_strategy: steps
 eval_steps: 64
-gradient_accumulation_steps: 8
+gradient_accumulation_steps: 16
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
@@ -49,11 +49,11 @@ logging_strategy: steps
 lr_scheduler_type: cosine
 max_length: 2312
 max_prompt_length: 1800
-num_train_epochs: 2
+num_train_epochs: 3
 dataset_num_proc: 16
 loss_type: sigmoid
 objective_type: mmpo
-average_logps: no
+average_logps: yes
 optim: adamw_8bit
 output_dir: dummy
 run_name: dummy

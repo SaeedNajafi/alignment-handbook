@@ -10,8 +10,8 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-export CUDA_VISIBLE_DEVICES="4,5,6,7"
-NUM_GPUs=4
+export CUDA_VISIBLE_DEVICES="6,7"
+NUM_GPUs=2
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
 # export NCCL_DEBUG=WARN
@@ -19,7 +19,7 @@ NUM_GPUs=4
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3-1b-v4"
+export WANDB_PROJECT="llama3-1b-v5"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -33,7 +33,7 @@ echo "Placing logs in: ${LOG_DIR}"
 echo "GPUs per node: ${NUM_GPUs}"
 
 lrs=(0.0003)
-betas=(0.01 0.05 0.1 0.5 1.0 2.0 2.5 5.0)
+betas=(0.01)
 mmpo_relu_epsilon=(0.5)
 reward_epsilons=(0.6)
 
@@ -49,7 +49,7 @@ do
             for b in ${!betas[@]};
             do
                 beta=${betas[$b]}
-                RUN_NAME="llama3.2-1b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-v4"
+                RUN_NAME="llama3.2-1b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-v5-original-loss-with-len-norm"
                 accelerate launch \
                     --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
                     --num_machines 1 \
@@ -63,7 +63,7 @@ do
                         --beta=${beta} \
                         --mmpo_reward_epsilon=${r_eps} \
                         --mmpo_relu_epsilon=${r_relu_eps} \
-                        --output_dir=/work/saeed/narval/mmpo_1b_v4/${RUN_NAME} \
+                        --output_dir=/work/saeed/narval/mmpo_1b_v5/${RUN_NAME} \
                         --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1
             done
         done

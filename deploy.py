@@ -11,8 +11,8 @@ flags.DEFINE_string("peft_model_path", "peft_model_path", "peft model path")
 def main(argv):
     del argv
     
-    model = LlamaForCausalLM.from_pretrained(FLAGS.base_model_path, device_map="auto")
-    tokenizer = AutoTokenizer.from_pretrained(FLAGS.peft_model_path, padding_side="left")
+    model = LlamaForCausalLM.from_pretrained(FLAGS.base_model_path, device_map="cuda:6")
+    tokenizer = AutoTokenizer.from_pretrained(FLAGS.peft_model_path)
     tokenizer.save_pretrained(FLAGS.peft_model_path+"_full_model")
     peft_model = PeftModel.from_pretrained(model, FLAGS.peft_model_path, is_trainable=False)
     peft_model = peft_model.bfloat16()
