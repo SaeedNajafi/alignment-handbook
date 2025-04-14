@@ -10,11 +10,11 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-lr=0.0003
+lr=0.0007
 beta=0.01
 RUN_NAME="llama3.2-1b-offline-dpo-beta-${beta}-lr-${lr}-with-length-norm-v5"
 
-export CUDA_VISIBLE_DEVICES="4,5"
+export CUDA_VISIBLE_DEVICES="2,3"
 NUM_GPUs=2
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL

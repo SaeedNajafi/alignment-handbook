@@ -10,7 +10,7 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-export CUDA_VISIBLE_DEVICES="6,7"
+export CUDA_VISIBLE_DEVICES="2,3"
 NUM_GPUs=2
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
@@ -32,10 +32,10 @@ mkdir -p "${LOG_DIR}"
 echo "Placing logs in: ${LOG_DIR}"
 echo "GPUs per node: ${NUM_GPUs}"
 
-lrs=(0.0003)
+lrs=(0.0005)
 betas=(0.01)
 mmpo_relu_epsilon=(0.5)
-reward_epsilons=(0.6)
+reward_epsilons=(0.5)
 
 for r_relu_eps_i in ${!mmpo_relu_epsilon[@]};
 do
@@ -49,7 +49,7 @@ do
             for b in ${!betas[@]};
             do
                 beta=${betas[$b]}
-                RUN_NAME="llama3.2-1b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-v5-original-loss-with-len-norm"
+                RUN_NAME="llama3.2-1b-offline-mmpo-beta-${beta}-lr-${lr}-reward_eps_${r_eps}-relu-epsilon-${r_relu_eps}-v5-original-loss"
                 accelerate launch \
                     --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
                     --num_machines 1 \
