@@ -144,9 +144,6 @@ def main():
     data_args.truncation_side = "left"  # Truncate from left to ensure we don't lose labels in final turn
     tokenizer = get_tokenizer(model_args, data_args)
 
-    # train_dataset = datasets.load_from_disk("/work/saeed/narval/preference-data/train")
-    # train_dataset = datasets.load_from_disk("/work/saeed/narval/llama-3.2-1b-offline-preference-data/tuning_dataset")
-    # eval_dataset = datasets.load_from_disk("/work/saeed/narval/preference-data/test")
     train_dataset = raw_datasets["train"]
     eval_dataset = raw_datasets["test"]
     train_dataset = process_dataset(train_dataset, data_args, tokenizer)
@@ -162,38 +159,10 @@ def main():
         attn_implementation=model_args.attn_implementation,
         torch_dtype=torch_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,
-        # device_map=get_kbit_device_map() if quantization_config is not None else None,
         quantization_config=quantization_config,
     )
 
-    # model = model_args.model_name_or_path
-    # if is_adapter_model(model, model_args.model_revision) is True:
-    #     logger.info(f"Loading SFT adapter for {model_args.model_name_or_path=}")
-    #     peft_config = PeftConfig.from_pretrained(model_args.model_name_or_path, revision=model_args.model_revision)
-    #     model_kwargs = dict(
-    #         revision=model_args.base_model_revision,
-    #         trust_remote_code=model_args.trust_remote_code,
-    #         attn_implementation=model_args.attn_implementation,
-    #         torch_dtype=torch_dtype,
-    #         use_cache=False if training_args.gradient_checkpointing else True,
-    #         device_map=get_kbit_device_map() if quantization_config is not None else None,
-    #         quantization_config=quantization_config,
-    #     )
-    #     base_model = AutoModelForCausalLM.from_pretrained(
-    #         peft_config.base_model_name_or_path,
-    #         **model_kwargs,
-    #     )
-    #     model = PeftModel.from_pretrained(
-    #         base_model,
-    #         model_args.model_name_or_path,
-    #         revision=model_args.model_revision,
-    #     )
-    #     model_kwargs = None
-
     model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
-    # training_args.model_init_kwargs = model_kwargs
-    #ref_model = model
-    #ref_model_kwargs = model_kwargs
     ref_model = None
     ref_model_kwargs = None
 
@@ -209,18 +178,11 @@ def main():
     trainer = DPOTrainer(
         model,
         ref_model,
-        # model_init_kwargs=model_kwargs,
-        # ref_model_init_kwargs=ref_model_kwargs,
         args=training_args,
-        # beta=training_args.beta,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        # tokenizer=tokenizer,
         processing_class=tokenizer,
-        # max_length=training_args.max_length,
-        # max_prompt_length=training_args.max_prompt_length,
         peft_config=get_peft_config(model_args),
-        # loss_type=training_args.loss_type,
     )
 
     ###############
@@ -247,13 +209,6 @@ def main():
     trainer.save_model(training_args.output_dir)
     logger.info(f"Model saved to {training_args.output_dir}")
 
-    # Save everything else on main process
-    # kwargs = {
-    #     "finetuned_from": model_args.model_name_or_path,
-    #     "dataset": list(data_args.dataset_mixer.keys()),
-    #     "dataset_tags": list(data_args.dataset_mixer.keys()),
-    #     "tags": ["alignment-handbook-offline-dpo"],
-    # }
     if trainer.accelerator.is_main_process:
         # trainer.create_model_card(**kwargs)
         # Restore k,v cache for fast inference

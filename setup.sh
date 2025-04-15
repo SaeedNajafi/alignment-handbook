@@ -4,7 +4,9 @@ set -e
 
 ENV_NAME=$1
 
-conda create -n ${ENV_NAME} python=3.12
+module --force purge
+
+conda create -n ${ENV_NAME} python=3.11
 
 eval "$(conda shell.bash hook)"
 
@@ -14,13 +16,13 @@ conda activate ${ENV_NAME}
 # conda install -c conda-forge cxx-compiler gxx gcc -y
 
 # echo "Installing git."
-conda install -c anaconda git -y
+# conda install -c anaconda git -y
 
 # echo "Installing git-lfs."
-conda install -c conda-forge git-lfs -y
+# conda install -c conda-forge git-lfs -y
 
 # echo "Installing rust."
-conda install -c conda-forge rust -y
+# conda install -c conda-forge rust -y
 
 echo "Installing cuda drivers."
 conda install -c nvidia/label/cuda-12.4.1 cuda cuda-nvcc cuda-toolkit -y
