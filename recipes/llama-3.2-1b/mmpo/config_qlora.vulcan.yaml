@@ -52,7 +52,7 @@ num_train_epochs: 3
 dataset_num_proc: 8
 loss_type: sigmoid
 objective_type: mmpo
-average_logps: no
+average_logps: yes
 optim: adamw_8bit
 output_dir: dummy
 run_name: dummy

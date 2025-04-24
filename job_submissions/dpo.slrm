@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=8
 #SBATCH --mem=128G
-#SBATCH --time=07:00:00
+#SBATCH --time=08:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -42,7 +42,7 @@ lr=${LR}
 beta=${BETA}
 output_dir=${OUTPUT_DIR}
 
-RUN_NAME="llama3.2-1b-offline-dpo-beta-${beta}-lr-${lr}-v6"
+RUN_NAME="llama3.2-1b-offline-dpo-beta-${beta}-lr-${lr}-no-len-norm-v6"
 
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL

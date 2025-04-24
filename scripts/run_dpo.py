@@ -93,7 +93,7 @@ def process_dataset(dataset, data_args, tokenizer):
     
 
 def main():
-    dist.init_process_group(backend='nccl', timeout=timedelta(seconds=360000))
+    dist.init_process_group(backend='nccl', timeout=timedelta(seconds=36000))
 
     parser = H4ArgumentParser((ModelArguments, DataArguments, DPOConfig))
     model_args, data_args, training_args = parser.parse()
