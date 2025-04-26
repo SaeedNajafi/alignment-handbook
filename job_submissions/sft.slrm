@@ -1,14 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=online-dpo-experiments
-# #SBATCH --account=rrg-afyshe
-#SBATCH --partition=a40
-#SBATCH --qos=normal
+#SBATCH --job-name=sft-exp
+#SBATCH --account=def-afyshe-ab
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=6
+#SBATCH --cpus-per-gpu=8
 #SBATCH --mem=128G
-#SBATCH --time=16:00:00
+#SBATCH --time=24:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -19,6 +17,15 @@ module --force purge
 
 eval "$(conda shell.bash hook)"
 conda activate llm-env
+
+# For reading key=value arguments
+for ARGUMENT in "$@"
+do
+	KEY=$(echo $ARGUMENT | cut -f1 -d=)
+	KEY_LENGTH=${#KEY}
+	VALUE="${ARGUMENT:$KEY_LENGTH+1}"
+	export "$KEY"="$VALUE"
+done
 
 export CUDA_HOME=$CONDA_PREFIX
 export NCCL_HOME=$CONDA_PREFIX
@@ -31,7 +38,7 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-LOG_DIR="training_logs"
+LOG_DIR="sft_training_logs"
 LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}.log"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
@@ -50,19 +57,22 @@ echo "GPUs per node: ${NUM_GPUs}"
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
+export WANDB_PROJECT="gemma-3-1b-v1"
+export WANDB_MODE="offline"
+export ACCELERATE_LOG_LEVEL="info"
 
 
 NUM_PROCS=$((NUM_GPUs*SLURM_NNODES))
 
-srun -N "${SLURM_NNODES}" -l \
-    bash -c "WANDB_MODE=offline ACCELERATE_LOG_LEVEL=info accelerate launch \
+srun -l \
+    bash -c "accelerate launch \
                 --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
                 --num_machines $SLURM_NNODES \
-                --num_processes $NUM_PROCS \
+                --num_processes 4 \
                 --main_process_ip $MASTER_ADDR \
                 --main_process_port $MASTER_PORT \
-                --machine_rank $SLURM_PROCID \
+                --machine_rank 0 \
                 --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                scripts/run_sft.py recipes/llama-3.2-1b/sft/config_lora.yaml > ${LOG_PATH} 2>&1"
+                scripts/run_sft.py recipes/gemma-3-1b/sft/config_lora.ultrachat.yaml > ${LOG_PATH} 2>&1"
 
 

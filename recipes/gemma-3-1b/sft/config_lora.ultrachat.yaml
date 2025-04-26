@@ -1,0 +1,57 @@
+# Model arguments
+model_name_or_path: /home/saeednjf/projects/def-afyshe-ab/saeednjf/weights/gemma-3-1b-pt
+model_revision: main
+torch_dtype: bfloat16
+attn_implementation: eager
+
+# LoRA arguments
+# No quantization.
+load_in_4bit: false
+use_peft: false
+
+# Data training arguments
+chat_template: "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n"
+dataset_mixer:
+  /home/saeednjf/projects/def-afyshe-ab/saeednjf/datasets/ultrachat_200k: 1.0
+
+dataset_splits:
+- train_sft
+- test_sft
+
+preprocessing_num_workers: 8
+
+# SFT trainer config
+max_grad_norm: 1.0
+bf16: true
+do_eval: false
+eval_strategy: steps
+eval_steps: 500
+gradient_accumulation_steps: 8
+gradient_checkpointing: false
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+hub_model_id: SaeedNajafi/gemma-3-1b-ultrachat_200k-sft
+hub_strategy: every_save
+learning_rate: 2.0e-04
+log_level: info
+logging_steps: 5  
+logging_strategy: steps
+lr_scheduler_type: cosine
+max_seq_length: 2312
+max_steps: -1
+num_train_epochs: 3
+optim: adamw_8bit
+output_dir: /home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/gemma-3-1b-sft/gemma-3-1b-ultrachat_200k-sft
+run_name: gemma-3-1b-ultrachat_200k-sft
+overwrite_output_dir: true
+per_device_eval_batch_size: 2
+per_device_train_batch_size: 2
+push_to_hub: false
+remove_unused_columns: true
+report_to:
+- wandb
+save_strategy: "steps"
+save_steps: 500
+save_total_limit: 5
+seed: 42
+warmup_ratio: 0.01

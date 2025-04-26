@@ -1,24 +1,30 @@
 #!/bin/bash
 
-#SBATCH --job-name=offline-simpo-exp
-# #SBATCH --account=rrg-afyshe
-#SBATCH --partition=a40
-#SBATCH --qos=m2
+#SBATCH --job-name=offline-dpo-8b
+#SBATCH --account=def-afyshe-ab
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=4
-#SBATCH --mem=64G
-#SBATCH --time=08:00:00
+#SBATCH --cpus-per-gpu=8
+#SBATCH --mem=128G
+#SBATCH --time=16:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
 
-
 module --force purge
 
 eval "$(conda shell.bash hook)"
 conda activate llm-env
+
+# For reading key=value arguments
+for ARGUMENT in "$@"
+do
+	KEY=$(echo $ARGUMENT | cut -f1 -d=)
+	KEY_LENGTH=${#KEY}
+	VALUE="${ARGUMENT:$KEY_LENGTH+1}"
+	export "$KEY"="$VALUE"
+done
 
 export CUDA_HOME=$CONDA_PREFIX
 export NCCL_HOME=$CONDA_PREFIX
@@ -31,10 +37,14 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-lr=0.0001
-beta=2.0
-gamma_to_beta=0.5
-RUN_NAME="llama3-1b-offline-simpo-tuning-beta-${beta}-lr-${lr}-gamma-to-beta-${gamma}-v4"
+
+avg_logps=${AVG_LOGPS}
+lr=${LR}
+beta=${BETA}
+output_dir=${OUTPUT_DIR}
+
+RUN_NAME="llama3-8b-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v7"
+
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
 # export NCCL_DEBUG=WARN
@@ -42,11 +52,11 @@ RUN_NAME="llama3-1b-offline-simpo-tuning-beta-${beta}-lr-${lr}-gamma-to-beta-${g
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3-1b-v4"
+export WANDB_PROJECT="llama3-8b-v1"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
-LOG_DIR="simpo_1b_training_logs"
+LOG_DIR="llama3-8b-v1_training_logs"
 LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}_run_${RUN_NAME}.log"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
@@ -61,7 +71,7 @@ echo "GPUs per node: ${NUM_GPUs}"
 
 NUM_PROCS=$((NUM_GPUs*SLURM_NNODES))
 
-srun -N "${SLURM_NNODES}" -l \
+srun -l \
     bash -c "accelerate launch \
                 --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
                 --num_machines $SLURM_NNODES \
@@ -70,11 +80,9 @@ srun -N "${SLURM_NNODES}" -l \
                 --main_process_port $MASTER_PORT \
                 --machine_rank $SLURM_PROCID \
                 --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                scripts/run_dpo.py recipes/llama-3.2-1b/simpo/config_qlora.vector.yaml \
+                scripts/run_dpo.py recipes/llama-3-8b/dpo/config_qlora.vulcan.yaml \
+                --average_logps=${avg_logps} \
                 --learning_rate=${lr} \
                 --beta=${beta} \
-                --gamma_beta_ratio=${gamma_to_beta} \
-                --output_dir=/scratch/ssd004/scratch/snajafi/vector-backup/mmpo-experiments/simpo_1b_v4/${RUN_NAME} \
+                --output_dir=${output_dir}/${RUN_NAME} \
                 --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1"
-
-

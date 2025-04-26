@@ -15,55 +15,51 @@ lora_target_modules:
 - k_proj
 - v_proj
 - o_proj
-# - gate_proj
-# - up_proj
-# - down_proj
+- gate_proj
+- up_proj
+- down_proj
 
 # Data training arguments
 dataset_mixer:
-  /home/saeednjf/nearline/rrg-afyshe/datasets/llama-3.2-1b-offline-preference-data: 1.0
-  
+  /home/saeednjf/nearline/rrg-afyshe/datasets/llama-3.2-1b-offline-preference-data/dataset: 1.0
+
 dataset_splits:
 - train
 - test
+
 preprocessing_num_workers: 8
 
-# DPOTrainer arguments
-max_grad_norm: 1.0
 bf16: true
-# beta: 8.0
-# gamma_beta_ratio: 0.1
 do_eval: true
 eval_strategy: steps
-eval_steps: 200
-gradient_accumulation_steps: 4
+eval_steps: 64
+gradient_accumulation_steps: 16
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
-learning_rate: 1.0e-6
+learning_rate: 10
 log_level: info
 logging_steps: 5
 logging_strategy: steps
 lr_scheduler_type: cosine
-max_length: 6144
-max_prompt_length: 2048
-max_completion_length: 4096
-num_train_epochs: 1
+max_length: 2312
+max_prompt_length: 1800
+num_train_epochs: 2
 dataset_num_proc: 8
 loss_type: sigmoid
 objective_type: sft
 average_logps: no
 optim: adamw_8bit
-output_dir: /home/saeednjf/nearline/rrg-afyshe/saeednjf/mmpo-experiments/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-sft-lr-1.0e-6
-run_name: llama3.2-1b-sftdatasetv3-sft-checkpoint-111000-offline-sft-lr-1.0e-6
-per_device_train_batch_size: 1
+output_dir: dummy
+run_name: dummy
+per_device_train_batch_size: 2
 per_device_eval_batch_size: 2
 push_to_hub: false
 remove_unused_columns: true
 report_to:
 - wandb
 save_strategy: "steps"
-save_steps: 200
-save_total_limit: 20
+save_steps: 64
+save_total_limit: 2
 seed: 42
 warmup_ratio: 0.1

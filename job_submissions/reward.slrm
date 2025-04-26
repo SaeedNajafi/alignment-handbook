@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#SBATCH --job-name=offline-mmpo-exp
+#SBATCH --job-name=reward_modelling
 #SBATCH --account=def-afyshe-ab
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=4
+#SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-gpu=8
-#SBATCH --mem=128G
+#SBATCH --mem=32G
 #SBATCH --time=08:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
@@ -37,13 +37,8 @@ export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0
 export RDVZ_ID=$RANDOM
 echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 
-avg_logps=${AVG_LOGPS}
-lr=${LR}
-beta=${BETA}
-output_dir=${OUTPUT_DIR}
-reward_epsilon=${REWARD_EPSILON}
+RUN_NAME="reward_modelling"
 
-RUN_NAME="llama3.2-1b-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_epsilon}-avg_logps_${avg_logps}-v7"
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
 # export NCCL_DEBUG=WARN
@@ -51,11 +46,11 @@ RUN_NAME="llama3.2-1b-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_eps
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3.2-1b-v7"
+export WANDB_PROJECT="llama3.2-1b-v1"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
-LOG_DIR="llama3.2-1b-mmpo-v7_training_logs"
+LOG_DIR="llama3.2-1b-v1_training_logs"
 LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}_run_${RUN_NAME}.log"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
@@ -68,23 +63,8 @@ nvidia-smi
 NUM_GPUs=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 echo "GPUs per node: ${NUM_GPUs}"
 
-NUM_PROCS=$((NUM_GPUs*SLURM_NNODES))
-
-srun -l \
-    bash -c "accelerate launch \
-            --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
-            --num_machines $SLURM_NNODES \
-            --num_processes $NUM_PROCS \
-            --main_process_ip $MASTER_ADDR \
-            --main_process_port $MASTER_PORT \
-            --machine_rank $SLURM_PROCID \
-            --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-            scripts/run_dpo.py recipes/llama-3.2-1b/mmpo/config_qlora.vulcan.yaml \
-            --average_logps=${avg_logps} \
-            --learning_rate=${lr} \
-            --beta=${beta} \
-            --mmpo_reward_epsilon=${reward_epsilon} \
-            --output_dir=${output_dir}/${RUN_NAME} \
-            --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1"
+python on_policy_data_gen/reward_model_annotate.py \
+	--generation_file=/home/saeednjf/projects/def-afyshe-ab/saeednjf/datasets/llama-3.2-1b-offline-preference-data/all_outputs.json \
+	--output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/datasets/llama-3.2-1b-offline-preference-data > ${LOG_PATH} 2>&1
 
 

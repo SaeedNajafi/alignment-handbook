@@ -1,70 +1,66 @@
 # Model arguments
-model_name_or_path: /work/saeed/narval/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
+model_name_or_path: /home/saeednjf/projects/def-afyshe-ab/saeednjf/weights/Llama-3-Base-8B-SFT
 torch_dtype: bfloat16
 model_revision: main
 attn_implementation: flash_attention_2
 
 # LoRA arguments
-use_peft: True
+use_peft: true
 load_in_4bit: false
-lora_r: 64
-lora_alpha: 64
+lora_r: 32
+lora_alpha: 32
 lora_dropout: 0.01
 lora_target_modules:
 - q_proj
 - k_proj
 - v_proj
 - o_proj
-- gate_proj
-- up_proj
-- down_proj
-
+# - gate_proj
+# - up_proj
+# - down_proj
 
 dataset_mixer:
-  /work/saeed/narval/llama-3.2-1b-offline-preference-data/dataset: 1.0
+  /home/saeednjf/projects/def-afyshe-ab/saeednjf/datasets/llama-3-8b-sft-offline-preference-data: 1.0
 
 dataset_splits:
 - train
 - test
 
-preprocessing_num_workers: 16
+preprocessing_num_workers: 8
 
-# DPOTrainer arguments
 bf16: true
 beta: 0.0
-mmpo_reward_epsilon: 1.0
-mmpo_relu_coefficient: 1.0
-mmpo_relu_epsilon: 0.5
+gamma_beta_ratio: 1.6
 do_eval: true
 eval_strategy: steps
-eval_steps: 64
-gradient_accumulation_steps: 16
+eval_steps: 256
+gradient_accumulation_steps: 32
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
-learning_rate: 1.0e-6
 log_level: info
 logging_steps: 5
 logging_strategy: steps
 lr_scheduler_type: cosine
-max_length: 2312
-max_prompt_length: 1800
+max_length: 2012
+max_prompt_length: 1500
 num_train_epochs: 3
-dataset_num_proc: 16
+dataset_num_proc: 8
 loss_type: sigmoid
-objective_type: mmpo
-average_logps: no
+objective_type: simpo
+average_logps: dummy
 optim: adamw_8bit
+learning_rate: 0.0
 output_dir: dummy
 run_name: dummy
-per_device_train_batch_size: 4
-per_device_eval_batch_size: 4
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
 push_to_hub: false
 remove_unused_columns: true
 report_to:
 - wandb
 save_strategy: "steps"
-save_steps: 64
-save_total_limit: 2
+save_steps: 256
+save_total_limit: 1
 seed: 42
 warmup_ratio: 0.1

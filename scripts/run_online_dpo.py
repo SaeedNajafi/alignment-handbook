@@ -161,38 +161,12 @@ def main():
         attn_implementation=model_args.attn_implementation,
         torch_dtype=torch_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,
-        # device_map=get_kbit_device_map() if quantization_config is not None else None,
         quantization_config=quantization_config,
     )
 
-    # model = model_args.model_name_or_path
-    # if is_adapter_model(model, model_args.model_revision) is True:
-    #     logger.info(f"Loading SFT adapter for {model_args.model_name_or_path=}")
-    #     peft_config = PeftConfig.from_pretrained(model_args.model_name_or_path, revision=model_args.model_revision)
-    #     model_kwargs = dict(
-    #         revision=model_args.base_model_revision,
-    #         trust_remote_code=model_args.trust_remote_code,
-    #         attn_implementation=model_args.attn_implementation,
-    #         torch_dtype=torch_dtype,
-    #         use_cache=False if training_args.gradient_checkpointing else True,
-    #         device_map=get_kbit_device_map() if quantization_config is not None else None,
-    #         quantization_config=quantization_config,
-    #     )
-    #     base_model = AutoModelForCausalLM.from_pretrained(
-    #         peft_config.base_model_name_or_path,
-    #         **model_kwargs,
-    #     )
-    #     model = PeftModel.from_pretrained(
-    #         base_model,
-    #         model_args.model_name_or_path,
-    #         revision=model_args.model_revision,
-    #     )
-    #     model_kwargs = None
-
     model = AutoModelForCausalLM.from_pretrained(
             model_args.model_name_or_path,
-            **model_kwargs,)
-            # device_map="cuda:0")
+            **model_kwargs)
 
     ref_model = None
     ref_model_kwargs = None
@@ -201,8 +175,7 @@ def main():
     # Initialize the reward model.
     reward_model = LlamaForRewardModelWithGating.from_pretrained(training_args.reward_model_path,
                                                                  attn_implementation=model_args.attn_implementation,
-                                                                 torch_dtype=torch_dtype,)
-                                                                 # device_map="cuda:1")
+                                                                 torch_dtype=torch_dtype)
 
     reward_tokenizer = AutoTokenizer.from_pretrained(training_args.reward_model_path, use_fast=True)
     
