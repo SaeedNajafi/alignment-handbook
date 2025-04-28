@@ -20,7 +20,7 @@ lora_target_modules:
 - down_proj
 
 dataset_mixer:
-  /home/saeednjf/projects/def-afyshe-ab/saeednjf/datasets/llama-3.2-1b-offline-preference-data/dataset: 1.0
+  /home/saeednjf/projects/def-afyshe-ab/saeednjf/datasets/llama-3.2-1b-offline-preference-data: 1.0
 
 dataset_splits:
 - train

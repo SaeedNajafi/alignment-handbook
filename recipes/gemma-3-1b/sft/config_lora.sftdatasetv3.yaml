@@ -1,66 +1,57 @@
 # Model arguments
-model_name_or_path: /work/saeed/dtrnet_data/mmpo-models/llama3.2-1b-ultrachat_200k-sft
+model_name_or_path: /home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/gemma-3-1b-sft/gemma-3-1b-ultrachat_200k-sft/checkpoint-9741
 model_revision: main
 torch_dtype: bfloat16
-attn_implementation: flash_attention_2
+attn_implementation: eager
 
 # LoRA arguments
 # No quantization.
 load_in_4bit: false
 use_peft: false
-lora_r: 64
-lora_alpha: 64
-lora_dropout: 0.1
-lora_target_modules:
-- q_proj
-- k_proj
-- v_proj
-- o_proj
-- gate_proj
-- up_proj
-- down_proj
 
 # Data training arguments
-chat_template: "{{- bos_token }}\n{%- if custom_tools is defined %}\n    {%- set tools = custom_tools %}\n{%- endif %}\n{%- if not tools_in_user_message is defined %}\n    {%- set tools_in_user_message = true %}\n{%- endif %}\n{%- if not date_string is defined %}\n    {%- if strftime_now is defined %}\n        {%- set date_string = strftime_now(\"%d %b %Y\") %}\n    {%- else %}\n        {%- set date_string = \"26 Jul 2024\" %}\n    {%- endif %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%- endif %}\n\n{#- This block extracts the system message, so we can slot it into the right place. #}\n{%- if messages[0]['role'] == 'system' %}\n    {%- set system_message = messages[0]['content']|trim %}\n    {%- set messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = \"\" %}\n{%- endif %}\n\n{#- System message #}\n{{- \"<|start_header_id|>system<|end_header_id|>\\n\\n\" }}\n{%- if tools is not none %}\n    {{- \"Environment: ipython\\n\" }}\n{%- endif %}\n{{- \"Cutting Knowledge Date: December 2023\\n\" }}\n{{- \"Today Date: \" + date_string + \"\\n\\n\" }}\n{%- if tools is not none and not tools_in_user_message %}\n    {{- \"You have access to the following functions. To call a function, please respond with JSON for a function call.\" }}\n    {{- 'Respond in the format {\"name\": function name, \"parameters\": dictionary of argument name and its value}.' }}\n    {{- \"Do not use variables.\\n\\n\" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n{%- endif %}\n{{- system_message }}\n{{- \"<|eot_id|>\" }}\n\n{#- Custom tools are passed in a user message with some extra guidance #}\n{%- if tools_in_user_message and not tools is none %}\n    {#- Extract the first user message so we can plug it in here #}\n    {%- if messages | length != 0 %}\n        {%- set first_user_message = messages[0]['content']|trim %}\n        {%- set messages = messages[1:] %}\n    {%- else %}\n        {{- raise_exception(\"Cannot put tools in the first user message when there's no first user message!\") }}\n{%- endif %}\n    {{- '<|start_header_id|>user<|end_header_id|>\\n\\n' -}}\n    {{- \"Given the following functions, please respond with a JSON for a function call \" }}\n    {{- \"with its proper arguments that best answers the given prompt.\\n\\n\" }}\n    {{- 'Respond in the format {\"name\": function name, \"parameters\": dictionary of argument name and its value}.' }}\n    {{- \"Do not use variables.\\n\\n\" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n    {{- first_user_message + \"<|eot_id|>\"}}\n{%- endif %}\n\n{%- for message in messages %}\n    {%- if not (message.role == 'ipython' or message.role == 'tool' or 'tool_calls' in message) %}\n        {{- '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n'+ message['content'] | trim + '<|eot_id|>' }}\n    {%- elif 'tool_calls' in message %}\n        {%- if not message.tool_calls|length == 1 %}\n            {{- raise_exception(\"This model only supports single tool-calls at once!\") }}\n        {%- endif %}\n        {%- set tool_call = message.tool_calls[0].function %}\n        {{- '<|start_header_id|>assistant<|end_header_id|>\\n\\n' -}}\n        {{- '{\"name\": \"' + tool_call.name + '\", ' }}\n        {{- '\"parameters\": ' }}\n        {{- tool_call.arguments | tojson }}\n        {{- \"}\" }}\n        {{- \"<|eot_id|>\" }}\n    {%- elif message.role == \"tool\" or message.role == \"ipython\" %}\n        {{- \"<|start_header_id|>ipython<|end_header_id|>\\n\\n\" }}\n        {%- if message.content is mapping or message.content is iterable %}\n            {{- message.content | tojson }}\n        {%- else %}\n            {{- message.content }}\n        {%- endif %}\n        {{- \"<|eot_id|>\" }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|start_header_id|>assistant<|end_header_id|>\\n\\n' }}\n{%- endif %}\n"
+chat_template: "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n"
 dataset_mixer:
-  /work/saeed/dtrnet_data/datasets/sftdatasetv3: 1.0
+  /home/saeednjf/projects/def-afyshe-ab/saeednjf/datasets/sftdatasetv3: 1.0
+
 dataset_splits:
 - train
 - test
-preprocessing_num_workers: 64
+
+preprocessing_num_workers: 8
 
 # SFT trainer config
 max_grad_norm: 1.0
 bf16: true
-do_eval: true
-evaluation_strategy: steps
+do_eval: false
+eval_strategy: steps
 eval_steps: 500
-gradient_accumulation_steps: 4
+gradient_accumulation_steps: 8
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
-hub_model_id: SaeedNajafi/llama3.2-1b-sftdatasetv3-sft
+hub_model_id: SaeedNajafi/gemma-3-1b-sftdatasetv3-sft
 hub_strategy: every_save
 learning_rate: 2.0e-04
 log_level: info
-logging_steps: 5  
+logging_steps: 5
 logging_strategy: steps
 lr_scheduler_type: cosine
-max_seq_length: 4096
+max_seq_length: 2312
 max_steps: -1
-num_train_epochs: 3
-optim: adamw_torch
-output_dir: /work/saeed/dtrnet_data/mmpo-models/llama3.2-1b-sftdatasetv3-sft
-run_name: llama3.2-1b-sftdatasetv3-sft
+num_train_epochs: 1
+optim: adamw_8bit
+output_dir: /home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/gemma-3-1b-sft/gemma-3-1b-sftdatasetv3-sft
+run_name: gemma-3-1b-sftdatasetv3-sft
 overwrite_output_dir: true
-per_device_eval_batch_size: 4
-per_device_train_batch_size: 4
-push_to_hub: true
+per_device_eval_batch_size: 2
+per_device_train_batch_size: 2
+push_to_hub: false
 remove_unused_columns: true
 report_to:
 - wandb
 save_strategy: "steps"
 save_steps: 500
-save_total_limit: 10
+save_total_limit: 5
 seed: 42
 warmup_ratio: 0.01

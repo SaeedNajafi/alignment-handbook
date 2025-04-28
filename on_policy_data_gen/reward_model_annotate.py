@@ -4,7 +4,9 @@ python on_policy_data_gen/reward_model_annotate.py --generation_file /scratch/ss
 python on_policy_data_gen/reward_model_annotate.py --generation_file /scratch/ssd004/scratch/snajafi/datasets/llama-3.2-1b-offline-preference-data/all_outputs.json --reward_model /scratch/ssd004/scratch/snajafi/model-weights/ArmoRM-Llama3-8B-v0.1 --output_dir /scratch/ssd004/scratch/snajafi/datasets/llama-3.2-1b-offline-preference-data
 """
 import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoTokenizer
+from alignment.armorm import LlamaForRewardModelWithGating
+
 import json
 import os
 import argparse
@@ -15,7 +17,7 @@ import random
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--generation_file", type=str, default="datasets/gemma2_ultrafeedback/all_outputs.json", help="Path to the output generation file")
-parser.add_argument("--reward_model", type=str, default="RLHFlow/ArmoRM-Llama3-8B-v0.1", help="Path to reward model")
+parser.add_argument("--reward_model", type=str, default="/home/saeednjf/projects/def-afyshe-ab/saeednjf/weights/ArmoRM-Llama3-8B-v0.1", help="Path to reward model")
 parser.add_argument("--output_dir", type=str, default="datasets/gemma2_ultrafeedback/", help="Path to output directory")
 args = parser.parse_args()
 
@@ -29,10 +31,12 @@ with open(generation_file, 'r') as f:
 inputs = [data["prompt"] for data in output_data]
 candidates_texts = [data["all_generated_responses"] for data in output_data]
 
-model = AutoModelForSequenceClassification.from_pretrained(args.reward_model, 
-                                                           device_map="cuda:0",
-                                                           attn_implementation="flash_attention_2",
-                                                           trust_remote_code=True, torch_dtype=torch.bfloat16)
+model = LlamaForRewardModelWithGating.from_pretrained(args.reward_model, 
+                                                      device_map="cuda:0",
+                                                      attn_implementation="flash_attention_2",
+                                                      trust_remote_code=True,
+                                                      torch_dtype=torch.bfloat16)
+
 tokenizer = AutoTokenizer.from_pretrained(args.reward_model, use_fast=True)
 
 for data in tqdm.tqdm(output_data):

@@ -86,7 +86,7 @@ accelerate launch \
     --machine_rank $SLURM_NODEID \
     --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
     scripts/run_dpo.py recipes/llama-3.2-1b/simpo/config_qlora.vulcan.yaml \
-        --average_logps=${avg_logps} \
+        --average_logps="${avg_logps}" \
         --learning_rate=${lr} \
         --beta=${beta} \
         --gamma_beta_ratio=${gamma_to_beta} \

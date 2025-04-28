@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=8
 #SBATCH --mem=128G
-#SBATCH --time=24:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -73,6 +73,6 @@ srun -l \
                 --main_process_port $MASTER_PORT \
                 --machine_rank 0 \
                 --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-                scripts/run_sft.py recipes/gemma-3-1b/sft/config_lora.ultrachat.yaml > ${LOG_PATH} 2>&1"
+                scripts/run_sft.py recipes/gemma-3-1b/sft/config_lora.sftdatasetv3.yaml > ${LOG_PATH} 2>&1"
 
 
