@@ -48,7 +48,7 @@ logging_strategy: steps
 lr_scheduler_type: cosine
 max_length: 2312
 max_prompt_length: 1800
-num_train_epochs: 3
+num_train_epochs: 5
 dataset_num_proc: 8
 loss_type: sigmoid
 objective_type: mmpo
@@ -62,8 +62,8 @@ push_to_hub: false
 remove_unused_columns: true
 report_to:
 - wandb
-save_strategy: "steps"
+save_strategy: "epoch"
 save_steps: 64
-save_total_limit: 1
+save_total_limit: 5
 seed: 42
 warmup_ratio: 0.1

@@ -35,7 +35,7 @@ class GatingNetwork(nn.Module):
 
 # token_pattern = tokenizer.encode("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n", add_special_tokens=False, )
 token_pattern = [128009, 128006, 78191, 128007, 271]
-
+assert token_pattern == [0, 1]
 
 def find_token_for_gating(lst, ):
     """Find the last occurrence of a token_pattern in a list."""

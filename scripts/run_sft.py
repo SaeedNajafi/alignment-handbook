@@ -49,7 +49,8 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    
+    torch.autograd.set_detect_anomaly(True)
+
     dist.init_process_group(backend='nccl', timeout=timedelta(seconds=360000))
     
     parser = H4ArgumentParser((ModelArguments, DataArguments, SFTConfig))
@@ -105,7 +106,7 @@ def main():
     # Load tokenizer
     ################
     tokenizer = get_tokenizer(model_args, data_args)
-    tokenizer.padding_side = 'left'
+    # tokenizer.padding_side = 'left'
 
     #######################
     # Load pretrained model
@@ -119,7 +120,7 @@ def main():
     model_kwargs = dict(
         revision=model_args.model_revision,
         trust_remote_code=model_args.trust_remote_code,
-        attn_implementation="eager",
+        attn_implementation="flash_attention_2",
         torch_dtype=torch_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,
         device_map=get_kbit_device_map() if quantization_config is not None else None,
@@ -128,10 +129,10 @@ def main():
 
     model = model_args.model_name_or_path
     # For ChatML we need to add special tokens and resize the embedding layer
-    if "<|im_start|>" in tokenizer.chat_template and "gemma-tokenizer-chatml" not in tokenizer.name_or_path:
-        model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
-        model, tokenizer = setup_chat_format(model, tokenizer)
-        model_kwargs = None
+    # if "<|im_start|>" in tokenizer.chat_template and "gemma-tokenizer-chatml" not in tokenizer.name_or_path:
+    #     model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, **model_kwargs)
+    #     model, tokenizer = setup_chat_format(model, tokenizer)
+    #     model_kwargs = None
 
     #####################
     # Apply chat template
@@ -167,6 +168,8 @@ def main():
 
 
     training_args.model_init_kwargs = model_kwargs
+    training_args.packing = False
+
     ########################
     # Initialize the Trainer
     ########################
@@ -210,7 +213,7 @@ def main():
         "tags": ["alignment-handbook"],
     }
     if trainer.accelerator.is_main_process:
-        trainer.create_model_card(**kwargs)
+        # trainer.create_model_card(**kwargs)
         # Restore k,v cache for fast inference
         trainer.model.config.use_cache = True
         trainer.model.config.save_pretrained(training_args.output_dir)

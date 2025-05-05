@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=8
 #SBATCH --mem=128G
-#SBATCH --time=08:00:00
+#SBATCH --time=12:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -43,7 +43,7 @@ lr=${LR}
 beta=${BETA}
 output_dir=${OUTPUT_DIR}
 
-RUN_NAME="llama3.2-1b-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v7"
+RUN_NAME="llama3.2-1b-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v8"
 
 
 # export TORCH_DISTRIBUTED_DEBUG=DETAIL
@@ -52,11 +52,11 @@ RUN_NAME="llama3.2-1b-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v
 # export TORCH_CPP_LOG_LEVEL=INFO
 # export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3.2-1b-v7"
+export WANDB_PROJECT="llama3.2-1b-v8"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
-LOG_DIR="llama3.2-1b-v7_training_logs"
+LOG_DIR="llama3.2-1b-v8_training_logs"
 LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}_run_${RUN_NAME}.log"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
