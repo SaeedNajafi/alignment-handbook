@@ -3,10 +3,10 @@
 #SBATCH --job-name=offline-simpo-smollm
 #SBATCH --account=def-afyshe-ab
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=1
+#SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
-#SBATCH --mem=64G
-#SBATCH --time=3:00:00
+#SBATCH --mem=96G
+#SBATCH --time=4:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -43,8 +43,8 @@ lr=${LR}
 beta=${BETA}
 gamma_to_beta=${GAMMA_TO_BETA}
 
-model_name_or_path=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_360M_sft/checkpoint-14380
-RUN_NAME="smollm2-360M-orca_bin_ultra-offline-simpo-beta_${beta}-lr_${lr}-gamma-to-beta_${gamma_to_beta}-avg_logps_${avg_logps}-v1"
+model_name_or_path="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_135M_sft/checkpoint-14378"
+RUN_NAME="smollm2-135M-orca_bin_ultra-offline-simpo-beta_${beta}-lr_${lr}-gamma-to-beta_${gamma_to_beta}-avg_logps_${avg_logps}-v1"
 output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/simpo_final/${RUN_NAME}
 
 export NCCL_ASYNC_ERROR_HANDLING=1

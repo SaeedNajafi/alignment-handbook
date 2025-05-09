@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH --time=2:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
@@ -43,7 +43,7 @@ lr=${LR}
 beta=${BETA}
 reward_epsilon=${REWARD_EPSILON}
 
-model_name_or_path=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/smollm2_360M_sft/checkpoint-14380
+model_name_or_path=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_360M_sft/checkpoint-14380
 RUN_NAME="smollm2-360M-orca_bin_ultra-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_epsilon}-avg_logps_${avg_logps}-v1"
 output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/${RUN_NAME}
 

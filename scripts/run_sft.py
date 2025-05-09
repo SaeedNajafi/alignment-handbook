@@ -49,8 +49,6 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    torch.autograd.set_detect_anomaly(True)
-
     dist.init_process_group(backend='nccl', timeout=timedelta(seconds=360000))
     
     parser = H4ArgumentParser((ModelArguments, DataArguments, SFTConfig))
