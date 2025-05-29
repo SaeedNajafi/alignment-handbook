@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=offline-mmpo-smollm
+#SBATCH --job-name=mmpo-smollm-360m
 #SBATCH --account=def-afyshe-ab
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
-#SBATCH --mem=128G
-#SBATCH --time=2:00:00
+#SBATCH --mem=64G
+#SBATCH --time=8:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -43,12 +43,12 @@ lr=${LR}
 beta=${BETA}
 reward_epsilon=${REWARD_EPSILON}
 
-model_name_or_path=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_360M_sft/checkpoint-14380
-RUN_NAME="smollm2-360M-orca_bin_ultra-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_epsilon}-avg_logps_${avg_logps}-v1"
-output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/${RUN_NAME}
+model_name_or_path="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_360M_sft/checkpoint-28758"
+RUN_NAME="smollm2-360M-orca_bin_ultra-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_epsilon}-avg_logps_${avg_logps}-v2-with-entropy"
+output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/mmpo_v2/${RUN_NAME}
 
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="smollm-experiments"
+export WANDB_PROJECT="smollm-experiments-v2"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -82,4 +82,7 @@ accelerate launch \
         --mmpo_reward_epsilon=${reward_epsilon} \
         --model_name_or_path=${model_name_or_path} \
         --output_dir=${output_dir} \
-        --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1
+        --num_train_epochs=5 \
+        --gradient_accumulation_steps=16 \
+        --per_device_train_batch_size=2 \
+        --per_device_eval_batch_size=2 --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1

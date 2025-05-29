@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=offline-mmpo-exp
+#SBATCH --job-name=mmpo-llama3.2-1b
 #SBATCH --account=def-afyshe-ab
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=8
 #SBATCH --mem=128G
-#SBATCH --time=12:00:00
+#SBATCH --time=03:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -40,22 +40,17 @@ echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 avg_logps=${AVG_LOGPS}
 lr=${LR}
 beta=${BETA}
-output_dir=${OUTPUT_DIR}
 reward_epsilon=${REWARD_EPSILON}
 
-RUN_NAME="llama3.2-1b-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_epsilon}-avg_logps_${avg_logps}-v8"
+RUN_NAME="llama3.2-1b-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_epsilon}-avg_logps_${avg_logps}-v9-with-entropy"
+output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/llama-3.2-1b-mmpo-v9/${RUN_NAME}
 
-# export TORCH_DISTRIBUTED_DEBUG=DETAIL
-# export NCCL_DEBUG=WARN
-# export NCCL_DEBUG_SUBSYS=WARN
-# export TORCH_CPP_LOG_LEVEL=INFO
-# export LOGLEVEL=INFO
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3.2-1b-v8"
+export WANDB_PROJECT="llama3.2-1b-v9"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
-LOG_DIR="llama3.2-1b-mmpo-v8_training_logs"
+LOG_DIR="llama3.2-1b-mmpo-v9_training_logs"
 LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}_run_${RUN_NAME}.log"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
@@ -83,8 +78,12 @@ srun -l \
             --average_logps=${avg_logps} \
             --learning_rate=${lr} \
             --beta=${beta} \
+            --num_train_epochs=5 \
+            --gradient_accumulation_steps=16 \
+            --per_device_train_batch_size=2 \
+            --per_device_eval_batch_size=2 \
             --mmpo_reward_epsilon=${reward_epsilon} \
-            --output_dir=${output_dir}/${RUN_NAME} \
+            --output_dir=${output_dir} \
             --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1"
 
 

@@ -35,7 +35,7 @@ beta: dummy
 do_eval: true
 eval_strategy: steps
 eval_steps: 64
-gradient_accumulation_steps: 8
+gradient_accumulation_steps: 16
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
@@ -54,8 +54,8 @@ learning_rate: dummy
 output_dir: dummy
 run_name: dummy
 optim: adamw_torch
-per_device_train_batch_size: 4
-per_device_eval_batch_size: 4
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 2
 push_to_hub: false
 remove_unused_columns: true
 report_to:

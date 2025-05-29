@@ -61,6 +61,6 @@ report_to:
 - wandb
 save_strategy: "epoch"
 save_steps: 64
-save_total_limit: 1
+save_total_limit: 5
 seed: 42
 warmup_ratio: 0.1

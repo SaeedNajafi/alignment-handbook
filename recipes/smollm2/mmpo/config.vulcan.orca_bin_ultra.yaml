@@ -46,7 +46,7 @@ logging_strategy: steps
 lr_scheduler_type: cosine
 max_length: 2312
 max_prompt_length: 1800
-num_train_epochs: 2
+num_train_epochs: 5
 dataset_num_proc: 8
 loss_type: sigmoid
 objective_type: mmpo

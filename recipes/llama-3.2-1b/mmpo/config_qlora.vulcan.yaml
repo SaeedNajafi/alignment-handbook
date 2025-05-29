@@ -32,8 +32,6 @@ preprocessing_num_workers: 8
 bf16: true
 beta: 0.0
 mmpo_reward_epsilon: 0.0
-mmpo_relu_coefficient: 0.0
-mmpo_relu_epsilon: 0.0
 do_eval: true
 eval_strategy: steps
 eval_steps: 64

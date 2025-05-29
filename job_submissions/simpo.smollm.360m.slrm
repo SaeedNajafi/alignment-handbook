@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=offline-dpo-smollm
+#SBATCH --job-name=simpo-smollm-360m
 #SBATCH --account=def-afyshe-ab
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
 #SBATCH --mem=64G
-#SBATCH --time=3:00:00
+#SBATCH --time=2:30:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -41,14 +41,14 @@ echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
 avg_logps=${AVG_LOGPS}
 lr=${LR}
 beta=${BETA}
+gamma_to_beta=${GAMMA_TO_BETA}
 
-model_name_or_path="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_360M_sft/checkpoint-14380"
-RUN_NAME="smollm2-360M-orca_bin_ultra-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v1"
-output_dir="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/dpo_final/${RUN_NAME}"
-
+model_name_or_path="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_360M_sft/checkpoint-28758"
+RUN_NAME="smollm2-360M-orca_bin_ultra-offline-simpo-beta_${beta}-lr_${lr}-gamma-to-beta_${gamma_to_beta}-avg_logps_${avg_logps}-v2"
+output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/simpo_final_v2/${RUN_NAME}
 
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="smollm-experiments"
+export WANDB_PROJECT="smollm-experiments-v2"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
@@ -75,10 +75,14 @@ accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_PROCID \
     --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
-    scripts/run_dpo.py recipes/smollm2/dpo/config.vulcan.orca_bin_ultra.yaml \
+    scripts/run_dpo.py recipes/smollm2/simpo/config.vulcan.orca_bin_ultra.yaml \
         --average_logps=${avg_logps} \
         --learning_rate=${lr} \
         --beta=${beta} \
+        --gamma_beta_ratio=${gamma_to_beta} \
         --model_name_or_path=${model_name_or_path} \
         --output_dir=${output_dir} \
-        --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1
+        --num_train_epochs=5 \
+        --gradient_accumulation_steps=16 \
+        --per_device_train_batch_size=2 \
+        --per_device_eval_batch_size=2 --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1
