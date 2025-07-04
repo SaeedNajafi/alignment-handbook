@@ -1,0 +1,86 @@
+#!/bin/bash
+
+#SBATCH --job-name=dpo-llama3.2-1b
+#SBATCH --account=rrg-afyshe
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=1
+#SBATCH --cpus-per-gpu=8
+#SBATCH --mem=32G
+#SBATCH --time=01:00:00
+#SBATCH --open-mode=append
+#SBATCH --wait-all-nodes=1
+#SBATCH --output=%x_%j.out
+#SBATCH --error=%x_%j.err
+
+module --force purge
+
+eval "$(conda shell.bash hook)"
+conda activate llm-env
+
+# For reading key=value arguments
+for ARGUMENT in "$@"
+do
+	KEY=$(echo $ARGUMENT | cut -f1 -d=)
+	KEY_LENGTH=${#KEY}
+	VALUE="${ARGUMENT:$KEY_LENGTH+1}"
+	export "$KEY"="$VALUE"
+done
+
+export CUDA_HOME=$CONDA_PREFIX
+export NCCL_HOME=$CONDA_PREFIX
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib
+
+date;pwd
+
+export MASTER_ADDR="$(hostname --fqdn)"
+export MASTER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')"
+export RDVZ_ID=$RANDOM
+echo "RDZV Endpoint $MASTER_ADDR:$MASTER_PORT"
+
+
+avg_logps=${AVG_LOGPS}
+lr=${LR}
+beta=${BETA}
+
+RUN_NAME="llama3.2-1b-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v10"
+output_dir=/home/saeednjf/nearline/def-afyshe-ab/saeednjf/llama-3.2-1b-dpo-v10/${RUN_NAME}
+
+export NCCL_ASYNC_ERROR_HANDLING=1
+export WANDB_PROJECT="llama3.2-1b-v10"
+export WANDB_MODE="offline"
+export ACCELERATE_LOG_LEVEL="info"
+
+LOG_DIR="llama3.2-1b_training_logs"
+LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}_run_${RUN_NAME}.log"
+# Make logging directories.
+mkdir -p "${LOG_DIR}"
+
+echo "Placing logs in: ${LOG_DIR}"
+echo "Number of nodes: ${SLURM_NNODES}"
+
+nvidia-smi
+
+NUM_GPUs=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
+echo "GPUs per node: ${NUM_GPUs}"
+
+NUM_PROCS=$((NUM_GPUs*SLURM_NNODES))
+
+srun -l \
+    bash -c "accelerate launch \
+                --config_file=recipes/accelerate_configs/deepspeed_zero2.yaml \
+                --num_machines $SLURM_NNODES \
+                --num_processes $NUM_PROCS \
+                --main_process_ip $MASTER_ADDR \
+                --main_process_port $MASTER_PORT \
+                --machine_rank $SLURM_PROCID \
+                --rdzv_conf "rdzv_backend=c10d,rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT" \
+                scripts/run_dpo.py recipes/llama-3.2-1b/dpo/config_qlora.narval.yaml \
+                --average_logps=${avg_logps} \
+                --learning_rate=${lr} \
+                --beta=${beta} \
+                --output_dir=${output_dir} \
+                --num_train_epochs=5 \
+                --gradient_accumulation_steps=16 \
+                --per_device_train_batch_size=2 \
+                --per_device_eval_batch_size=2 \
+                --run_name=${RUN_NAME} > ${LOG_PATH} 2>&1"
