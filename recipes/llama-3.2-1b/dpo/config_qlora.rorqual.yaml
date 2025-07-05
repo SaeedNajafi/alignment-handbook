@@ -1,0 +1,67 @@
+# Model arguments
+model_name_or_path: /home/saeednjf/links/projects/def-afyshe-ab/saeednjf/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000
+torch_dtype: bfloat16
+model_revision: main
+attn_implementation: flash_attention_2
+
+# LoRA arguments
+use_peft: true
+load_in_4bit: false
+lora_r: 64
+lora_alpha: 64
+lora_dropout: 0.01
+lora_target_modules:
+- q_proj
+- k_proj
+- v_proj
+- o_proj
+- gate_proj
+- up_proj
+- down_proj
+
+dataset_mixer:
+  /home/saeednjf/links/projects/def-afyshe-ab/saeednjf/datasets/orca_dpo_pairs: 1.0
+  /home/saeednjf/links/projects/def-afyshe-ab/saeednjf/datasets/ultrafeedback_binarized: 1.0
+
+dataset_splits:
+- train_prefs
+- test_prefs
+
+preprocessing_num_workers: 8
+
+# DPOTrainer arguments
+bf16: true
+beta: 0.0
+do_eval: true
+eval_strategy: steps
+eval_steps: 64
+gradient_accumulation_steps: 16
+gradient_checkpointing: false
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+log_level: info
+logging_steps: 5
+logging_strategy: steps
+lr_scheduler_type: cosine
+max_length: 2312
+max_prompt_length: 1800
+num_train_epochs: 5
+dataset_num_proc: 8
+loss_type: sigmoid
+objective_type: dpo
+average_logps: dummy
+learning_rate: 0.0
+output_dir: dummy
+run_name: dummy
+optim: adamw_8bit
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 2
+push_to_hub: false
+remove_unused_columns: true
+report_to:
+- wandb
+save_strategy: "epoch"
+save_steps: 64
+save_total_limit: 5
+seed: 42
+warmup_ratio: 0.1
