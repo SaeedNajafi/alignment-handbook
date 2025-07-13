@@ -42,7 +42,7 @@ lr=${LR}
 beta=${BETA}
 reward_epsilon=${REWARD_EPSILON}
 
-RUN_NAME="llama3.2-1b-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_epsilon}-avg_logps_${avg_logps}-v10-with-entropy"
+RUN_NAME="llama3.2-1b-offline-mmpo-beta_${beta}-lr_${lr}-reward_eps_${reward_epsilon}-avg_logps_${avg_logps}-v10-no-entropy"
 output_dir=/home/saeednjf/links/projects/def-afyshe-ab/saeednjf/checkpoints/llama-3.2-1b-mmpo-v10/${RUN_NAME}
 
 export NCCL_ASYNC_ERROR_HANDLING=1
@@ -79,9 +79,9 @@ srun -l \
             --learning_rate=${lr} \
             --beta=${beta} \
             --num_train_epochs=5 \
-            --gradient_accumulation_steps=16 \
-            --per_device_train_batch_size=2 \
-            --per_device_eval_batch_size=2 \
+            --gradient_accumulation_steps=32 \
+            --per_device_train_batch_size=1 \
+            --per_device_eval_batch_size=1 \
             --mmpo_reward_epsilon=${reward_epsilon} \
             --output_dir=${output_dir} \
             --run_name=${RUN_NAME} > ${LOG_DIR}/log_${RUN_NAME}.log 2>&1"
