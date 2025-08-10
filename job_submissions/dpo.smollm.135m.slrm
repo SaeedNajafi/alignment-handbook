@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
 #SBATCH --mem=64G
-#SBATCH --time=8:00:00
+#SBATCH --time=3:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -43,12 +43,12 @@ lr=${LR}
 beta=${BETA}
 
 model_name_or_path="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_135M_sft/checkpoint-14378"
-RUN_NAME="smollm2-135M-orca_bin_ultra-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v3"
-output_dir="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/v3-runs/${RUN_NAME}"
+RUN_NAME="smollm2-135M-orca_bin_ultra-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v4"
+output_dir="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/v4-runs/${RUN_NAME}"
 
 
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="smollm-experiments-v3"
+export WANDB_PROJECT="smollm-experiments-v4"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 

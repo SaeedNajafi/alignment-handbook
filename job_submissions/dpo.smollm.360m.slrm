@@ -43,12 +43,12 @@ lr=${LR}
 beta=${BETA}
 
 model_name_or_path="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/sfted_models/smollm2_360M_sft/checkpoint-28758"
-RUN_NAME="smollm2-360M-orca_bin_ultra-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v3"
-output_dir="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/v3-runs/${RUN_NAME}"
+RUN_NAME="smollm2-360M-orca_bin_ultra-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v4"
+output_dir="/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/smollm2/v4-runs/${RUN_NAME}"
 
 
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="smollm-experiments-v3"
+export WANDB_PROJECT="smollm-experiments-v4"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 

@@ -33,6 +33,7 @@ preprocessing_num_workers: 8
 bf16: true
 beta: dummy
 mmpo_reward_epsilon: dummy
+mmpo_optimize_entropy: dummy
 do_eval: true
 eval_strategy: steps
 eval_steps: 64
@@ -48,7 +49,6 @@ max_length: 2312
 max_prompt_length: 1800
 num_train_epochs: 5
 dataset_num_proc: 8
-loss_type: sigmoid
 objective_type: mmpo
 average_logps: dummy
 learning_rate: dummy
