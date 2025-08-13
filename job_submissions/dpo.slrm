@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
 #SBATCH --mem=128G
-#SBATCH --time=16:00:00
+#SBATCH --time=24:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -43,15 +43,15 @@ lr=${LR}
 beta=${BETA}
 
 model_name_or_path="/home/saeednjf/projects/def-afyshe-ab/saeednjf/llama3.2-1b-sftdatasetv3-sft-checkpoint-111000"
-RUN_NAME="llama3.2-1b-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v12"
-output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/llama-3.2-1b-dpo-v12/${RUN_NAME}
+RUN_NAME="llama3.2-1b-offline-dpo-beta_${beta}-lr_${lr}-avg_logps_${avg_logps}-v13"
+output_dir=/home/saeednjf/projects/def-afyshe-ab/saeednjf/checkpoints/llama-3.2-1b-dpo-v13/${RUN_NAME}
 
 export NCCL_ASYNC_ERROR_HANDLING=1
-export WANDB_PROJECT="llama3.2-1b-v12"
+export WANDB_PROJECT="llama3.2-1b-v13"
 export WANDB_MODE="offline"
 export ACCELERATE_LOG_LEVEL="info"
 
-LOG_DIR="llama3.2-1b_training_logs"
+LOG_DIR="llama3.2-1b-dpo-v13_training_logs"
 LOG_PATH="${LOG_DIR}/log_${SLURM_JOB_ID}_rank_${SLURM_PROCID}_run_${RUN_NAME}.log"
 # Make logging directories.
 mkdir -p "${LOG_DIR}"
