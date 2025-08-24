@@ -13,11 +13,11 @@ def main(argv):
     
     model = LlamaForCausalLM.from_pretrained(FLAGS.base_model_path, device_map="auto")
     tokenizer = AutoTokenizer.from_pretrained(FLAGS.peft_model_path)
-    tokenizer.save_pretrained(FLAGS.peft_model_path+"_full_model")
+    tokenizer.save_pretrained(FLAGS.peft_model_path)
     peft_model = PeftModel.from_pretrained(model, FLAGS.peft_model_path, is_trainable=False)
     peft_model = peft_model.bfloat16()
     merged_model = peft_model.merge_and_unload()
-    merged_model.save_pretrained(FLAGS.peft_model_path+"_full_model", safe_serialization=True)
+    merged_model.save_pretrained(FLAGS.peft_model_path, safe_serialization=True)
 
 if __name__ == "__main__":
     app.run(main)
