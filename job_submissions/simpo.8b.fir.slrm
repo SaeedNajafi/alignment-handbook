@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-gpu=4
 #SBATCH --gpus-per-node=h100:4
 #SBATCH --mem=128G
-#SBATCH --time=08:00:00
+#SBATCH --time=24:00:00
 #SBATCH --open-mode=append
 #SBATCH --wait-all-nodes=1
 #SBATCH --output=%x_%j.out
@@ -83,7 +83,7 @@ srun -N "${SLURM_NNODES}" -l \
                 --beta=${beta} \
                 --gamma_beta_ratio=${gamma_to_beta} \
                 --output_dir=${output_dir} \
-                --num_train_epochs=2 \
+                --num_train_epochs=5 \
                 --model_name_or_path=${model_name_or_path} \
                 --gradient_accumulation_steps=16 \
                 --per_device_train_batch_size=2 \
